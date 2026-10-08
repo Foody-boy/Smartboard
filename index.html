@@ -4,14 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Dark Green Interactive Smart Board</title>
-    <!-- FontAwesome for UI Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --board-bg: #113826;
-            --board-texture: #0b291a;
-            --dock-bg: rgba(10, 30, 20, 0.88);
-            --border-color: rgba(255, 255, 255, 0.15);
+            --dock-bg: rgba(8, 26, 17, 0.94);
+            --border-color: rgba(255, 255, 255, 0.18);
             --active-color: #00ff88;
             --text-color: #e0f2fe;
         }
@@ -34,7 +31,7 @@
             color: var(--text-color);
         }
 
-        /* Dark Green Chalkboard Canvas Frame */
+        /* Viewport & Canvas Container */
         #viewport {
             position: relative;
             width: 100vw;
@@ -62,9 +59,8 @@
         #grid-canvas { z-index: 1; }
         #main-canvas { z-index: 2; }
         #temp-canvas { z-index: 3; }
-        #tools-canvas { z-index: 4; pointer-events: none; }
 
-        /* Floating Minimalist Top Navigation Header */
+        /* Top Bar */
         .top-nav {
             position: absolute;
             top: 16px;
@@ -81,11 +77,10 @@
             background: var(--dock-bg);
             backdrop-filter: blur(12px);
             border: 1px solid var(--border-color);
-            padding: 8px 16px;
+            padding: 8px 18px;
             border-radius: 30px;
             font-size: 14px;
             font-weight: 600;
-            letter-spacing: 0.5px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.4);
             pointer-events: auto;
             display: flex;
@@ -93,7 +88,13 @@
             gap: 10px;
         }
 
-        .brand-badge i { color: var(--active-color); }
+        .brand-badge span.dot {
+            width: 10px;
+            height: 10px;
+            background: var(--active-color);
+            border-radius: 50%;
+            display: inline-block;
+        }
 
         .page-controls {
             background: var(--dock-bg);
@@ -110,7 +111,7 @@
 
         .page-btn {
             background: transparent;
-            border: none;
+            border: 1px solid rgba(255,255,255,0.2);
             color: white;
             cursor: pointer;
             width: 32px;
@@ -119,12 +120,13 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 14px;
             transition: all 0.2s;
         }
 
         .page-btn:hover { background: rgba(255,255,255,0.15); }
 
-        /* Spacious Bottom Main Dock Bar */
+        /* Bottom Dock Toolbar */
         .bottom-dock {
             position: absolute;
             bottom: 20px;
@@ -137,9 +139,9 @@
             border-radius: 40px;
             display: flex;
             align-items: center;
-            gap: 24px; /* Spacious separation */
+            gap: 18px;
             z-index: 100;
-            box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.6);
         }
 
         .dock-tab {
@@ -149,24 +151,21 @@
             justify-content: center;
             background: transparent;
             border: none;
-            color: rgba(255, 255, 255, 0.7);
+            color: rgba(255, 255, 255, 0.75);
             cursor: pointer;
-            padding: 6px 10px;
+            padding: 8px 12px;
             border-radius: 12px;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s;
             min-width: 58px;
             gap: 4px;
-            position: relative;
         }
 
-        .dock-tab i {
-            font-size: 20px;
+        .dock-tab .tab-icon {
+            font-size: 18px;
+            font-weight: bold;
         }
 
-        .dock-tab span {
-            font-size: 11px;
-            font-weight: 500;
-        }
+        .dock-tab span { font-size: 11px; font-weight: 500; }
 
         .dock-tab:hover {
             color: #ffffff;
@@ -185,20 +184,19 @@
             background: var(--border-color);
         }
 
-        /* Glassmorphism Floating Pop-up Panels */
+        /* Floating Popups */
         .popup-panel {
             position: absolute;
             bottom: 95px;
             left: 50%;
             transform: translateX(-50%) translateY(20px) scale(0.95);
-            background: rgba(12, 34, 23, 0.94);
+            background: rgba(10, 30, 20, 0.96);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             padding: 20px;
             border-radius: 20px;
             z-index: 99;
-            box-shadow: 0 16px 40px rgba(0,0,0,0.6);
-            display: opacity;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.7);
             opacity: 0;
             pointer-events: none;
             transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -219,12 +217,8 @@
             color: #88c9a1;
             margin-bottom: 12px;
             font-weight: 600;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
 
-        /* Color Options Bar */
         .color-grid {
             display: flex;
             gap: 10px;
@@ -254,6 +248,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 12px;
+            color: #fff;
         }
 
         .custom-color-picker input[type="color"] {
@@ -264,22 +260,13 @@
             cursor: pointer;
         }
 
-        /* Tool Grid & Selectors */
         .grid-options {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
             gap: 10px;
             max-height: 280px;
             overflow-y: auto;
             padding-right: 4px;
-        }
-
-        .grid-options::-webkit-scrollbar {
-            width: 4px;
-        }
-        .grid-options::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.2);
-            border-radius: 4px;
         }
 
         .option-card {
@@ -307,19 +294,9 @@
             color: var(--active-color);
         }
 
-        .option-card svg {
-            width: 36px;
-            height: 36px;
-            fill: none;
-            stroke: currentColor;
-            stroke-width: 2;
-        }
+        .option-card .card-icon { font-size: 20px; }
+        .option-card span { font-size: 11px; }
 
-        .option-card span {
-            font-size: 11px;
-        }
-
-        /* Range Sliders */
         .slider-group {
             margin-top: 12px;
             display: flex;
@@ -327,43 +304,24 @@
             gap: 12px;
         }
 
-        .slider-group label {
-            font-size: 12px;
-            width: 70px;
-        }
+        .slider-group label { font-size: 12px; width: 80px; }
+        .slider-group input[type="range"] { flex: 1; accent-color: var(--active-color); }
 
-        .slider-group input[type="range"] {
-            flex: 1;
-            accent-color: var(--active-color);
-        }
-
-        /* Canvas Note / Speech Dictation Display */
         #speech-toast {
             position: absolute;
             top: 70px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
             border: 1px solid var(--active-color);
             color: #ffffff;
-            padding: 8px 18px;
+            padding: 8px 20px;
             border-radius: 20px;
             font-size: 14px;
             display: none;
             align-items: center;
             gap: 8px;
             z-index: 200;
-        }
-
-        /* Pulsing Glow Pen Animation Helper Class */
-        .recording-pulse {
-            animation: pulse-red 1.5s infinite;
-        }
-
-        @keyframes pulse-red {
-            0% { color: #ff4757; }
-            50% { color: #ffffff; }
-            100% { color: #ff4757; }
         }
     </style>
 </head>
@@ -375,37 +333,32 @@
             <canvas id="grid-canvas"></canvas>
             <canvas id="main-canvas"></canvas>
             <canvas id="temp-canvas"></canvas>
-            <canvas id="tools-canvas"></canvas>
         </div>
 
         <!-- Top Navigation -->
         <div class="top-nav">
             <div class="brand-badge">
-                <i class="fa-solid fa-chalkboard-user"></i>
+                <span class="dot"></span>
                 <span>Smart Board</span>
             </div>
 
             <div class="page-controls">
-                <button class="page-btn" id="prev-page-btn" title="Previous Page"><i class="fa-solid fa-chevron-left"></i></button>
+                <button class="page-btn" id="prev-page-btn" title="Previous Page">&lt;</button>
                 <span id="page-indicator" style="font-size:13px; font-weight:600;">Page 1 / 1</span>
-                <button class="page-btn" id="next-page-btn" title="Next Page"><i class="fa-solid fa-chevron-right"></i></button>
-                <button class="page-btn" id="add-page-btn" title="Add New Page" style="color:var(--active-color);"><i class="fa-solid fa-plus"></i></button>
+                <button class="page-btn" id="next-page-btn" title="Next Page">&gt;</button>
+                <button class="page-btn" id="add-page-btn" title="Add Page" style="color:var(--active-color); font-weight:bold;">+</button>
             </div>
         </div>
 
-        <!-- Speech Dictation Status Toast -->
+        <!-- Speech Toast -->
         <div id="speech-toast">
-            <i class="fa-solid fa-microphone recording-pulse"></i>
             <span id="speech-text">Listening... Speak now</span>
         </div>
 
         <!-- Pop-up Floating Panels -->
-        <!-- 1. Pens & Brushes Pop-up -->
+        <!-- 1. Pens Pop-up -->
         <div class="popup-panel" id="popup-pens">
-            <div class="popup-header">
-                <span>Select Pen & Color</span>
-            </div>
-            <!-- Standard chalk colors + custom color selector -->
+            <div class="popup-header"><span>Select Pen & Color</span></div>
             <div class="color-grid">
                 <div class="color-swatch active" style="background:#ffffff;" data-color="#ffffff"></div>
                 <div class="color-swatch" style="background:#ff5252;" data-color="#ff5252"></div>
@@ -414,29 +367,29 @@
                 <div class="color-swatch" style="background:#70a1ff;" data-color="#70a1ff"></div>
                 <div class="color-swatch" style="background:#eccc68;" data-color="#eccc68"></div>
                 <div class="custom-color-picker" title="Custom Color Palette">
-                    <i class="fa-solid fa-palette" style="font-size:14px; color:#fff;"></i>
+                    🎨
                     <input type="color" id="custom-color-input" value="#ffffff">
                 </div>
             </div>
             <div class="grid-options" style="grid-template-columns: repeat(4, 1fr);">
                 <div class="option-card active" data-pen="normal">
-                    <i class="fa-solid fa-pen" style="font-size:20px;"></i>
+                    <span class="card-icon">✏️</span>
                     <span>Normal Pen</span>
                 </div>
                 <div class="option-card" data-pen="glow">
-                    <i class="fa-solid fa-wand-magic-sparkles" style="font-size:20px; color:#00ff88;"></i>
+                    <span class="card-icon">🪄</span>
                     <span>Glow Pen</span>
                 </div>
                 <div class="option-card" data-pen="calligraphy">
-                    <i class="fa-solid fa-pen-nib" style="font-size:20px;"></i>
+                    <span class="card-icon">✒️</span>
                     <span>Chinese Nib</span>
                 </div>
                 <div class="option-card" data-pen="flat">
-                    <i class="fa-solid fa-paintbrush" style="font-size:20px;"></i>
+                    <span class="card-icon">🖌️</span>
                     <span>Flat Brush</span>
                 </div>
                 <div class="option-card" data-pen="highlighter">
-                    <i class="fa-solid fa-highlighter" style="font-size:20px; color:yellow;"></i>
+                    <span class="card-icon">🖍️</span>
                     <span>Highlighter</span>
                 </div>
             </div>
@@ -446,132 +399,64 @@
             </div>
         </div>
 
-        <!-- 2. Shapes Library Pop-up -->
+        <!-- 2. Shapes Pop-up -->
         <div class="popup-panel" id="popup-shapes">
-            <div class="popup-header">
-                <span>2D & 3D Geometry Shapes</span>
-            </div>
-            <div class="grid-options" style="grid-template-columns: repeat(5, 1fr);">
-                <div class="option-card" data-shape="line">
-                    <i class="fa-solid fa-minus"></i>
-                    <span>Line</span>
-                </div>
-                <div class="option-card" data-shape="arrow">
-                    <i class="fa-solid fa-long-arrow-right"></i>
-                    <span>Arrow</span>
-                </div>
-                <div class="option-card" data-shape="rectangle">
-                    <i class="fa-regular fa-square"></i>
-                    <span>Rectangle</span>
-                </div>
-                <div class="option-card" data-shape="circle">
-                    <i class="fa-regular fa-circle"></i>
-                    <span>Circle</span>
-                </div>
-                <div class="option-card" data-shape="triangle">
-                    <i class="fa-solid fa-play" style="transform:rotate(-90deg);"></i>
-                    <span>Triangle</span>
-                </div>
-                <div class="option-card" data-shape="star">
-                    <i class="fa-regular fa-star"></i>
-                    <span>Star</span>
-                </div>
-                <div class="option-card" data-shape="cube">
-                    <i class="fa-solid fa-cube"></i>
-                    <span>Cube</span>
-                </div>
-                <div class="option-card" data-shape="cylinder">
-                    <i class="fa-solid fa-database"></i>
-                    <span>Cylinder</span>
-                </div>
-                <div class="option-card" data-shape="cone">
-                    <i class="fa-solid fa-cone"></i>
-                    <span>Cone</span>
-                </div>
-                <div class="option-card" data-shape="axes">
-                    <i class="fa-solid fa-chart-line"></i>
-                    <span>XY Grid</span>
-                </div>
+            <div class="popup-header"><span>Shapes</span></div>
+            <div class="grid-options" style="grid-template-columns: repeat(4, 1fr);">
+                <div class="option-card" data-shape="line"><span class="card-icon">➖</span><span>Line</span></div>
+                <div class="option-card" data-shape="arrow"><span class="card-icon">➡️</span><span>Arrow</span></div>
+                <div class="option-card" data-shape="rectangle"><span class="card-icon">▭</span><span>Rectangle</span></div>
+                <div class="option-card" data-shape="circle"><span class="card-icon">◯</span><span>Circle</span></div>
+                <div class="option-card" data-shape="triangle"><span class="card-icon">🔺</span><span>Triangle</span></div>
+                <div class="option-card" data-shape="star"><span class="card-icon">⭐</span><span>Star</span></div>
+                <div class="option-card" data-shape="cube"><span class="card-icon">🧊</span><span>Cube</span></div>
+                <div class="option-card" data-shape="cylinder"><span class="card-icon">🛢️</span><span>Cylinder</span></div>
             </div>
         </div>
 
-        <!-- 3. Math Geometry Tools Pop-up -->
+        <!-- 3. Math Geometry Equipment Pop-up -->
         <div class="popup-panel" id="popup-math">
-            <div class="popup-header"><span>Geometry Tools</span></div>
-            <div class="grid-options" style="grid-template-columns: repeat(3, 1fr);">
-                <div class="option-card" data-tool="ruler">
-                    <i class="fa-solid fa-ruler"></i>
-                    <span>Ruler</span>
-                </div>
-                <div class="option-card" data-tool="protractor">
-                    <i class="fa-solid fa-circle-notch"></i>
-                    <span>Protractor</span>
-                </div>
-                <div class="option-card" data-tool="setsquare">
-                    <i class="fa-solid fa-ruler-combined"></i>
-                    <span>Set Square</span>
-                </div>
+            <div class="popup-header"><span>Mathematics Box</span></div>
+            <div class="grid-options" style="grid-template-columns: repeat(2, 1fr);">
+                <div class="option-card" data-stamp="ruler"><span class="card-icon">📏</span><span>Ruler</span></div>
+                <div class="option-card" data-stamp="protractor"><span class="card-icon">📐</span><span>Protractor</span></div>
+                <div class="option-card" data-stamp="setsquare"><span class="card-icon">📐</span><span>Set Square</span></div>
+                <div class="option-card" data-stamp="compass"><span class="card-icon">🧭</span><span>Compass</span></div>
             </div>
         </div>
 
-        <!-- 4. Bio Diagram Stencils Pop-up -->
+        <!-- 4. Bio Diagram Pop-up -->
         <div class="popup-panel" id="popup-bio">
             <div class="popup-header"><span>Biology Diagrams</span></div>
-            <div class="grid-options" style="grid-template-columns: repeat(3, 1fr);">
-                <div class="option-card" data-stamp="animal-cell">
-                    <i class="fa-solid fa-circle-dot"></i>
-                    <span>Animal Cell</span>
-                </div>
-                <div class="option-card" data-stamp="plant-cell">
-                    <i class="fa-solid fa-square-poll-vertical"></i>
-                    <span>Plant Cell</span>
-                </div>
-                <div class="option-card" data-stamp="neuron">
-                    <i class="fa-solid fa-diagram-project"></i>
-                    <span>Neuron</span>
-                </div>
+            <div class="grid-options" style="grid-template-columns: repeat(2, 1fr);">
+                <div class="option-card" data-stamp="animal-cell"><span class="card-icon">🔬</span><span>Animal Cell</span></div>
+                <div class="option-card" data-stamp="plant-cell"><span class="card-icon">🌱</span><span>Plant Cell</span></div>
+                <div class="option-card" data-stamp="neuron"><span class="card-icon">🧠</span><span>Neuron</span></div>
+                <div class="option-card" data-stamp="dna"><span class="card-icon">🧬</span><span>DNA Helix</span></div>
             </div>
         </div>
 
-        <!-- 5. Physics Diagrams Pop-up -->
+        <!-- 5. Physics Pop-up -->
         <div class="popup-panel" id="popup-physics">
             <div class="popup-header"><span>Physics Equipment</span></div>
             <div class="grid-options" style="grid-template-columns: repeat(3, 1fr);">
-                <div class="option-card" data-stamp="circuit">
-                    <i class="fa-solid fa-car-battery"></i>
-                    <span>Circuit</span>
-                </div>
-                <div class="option-card" data-stamp="lens">
-                    <i class="fa-solid fa-glasses"></i>
-                    <span>Convex Lens</span>
-                </div>
-                <div class="option-card" data-stamp="magnet">
-                    <i class="fa-solid fa-magnet"></i>
-                    <span>Bar Magnet</span>
-                </div>
+                <div class="option-card" data-stamp="circuit"><span class="card-icon">🔋</span><span>Circuit</span></div>
+                <div class="option-card" data-stamp="lens"><span class="card-icon">🔍</span><span>Convex Lens</span></div>
+                <div class="option-card" data-stamp="magnet"><span class="card-icon">🧲</span><span>Bar Magnet</span></div>
             </div>
         </div>
 
-        <!-- 6. Chemistry Diagrams Pop-up -->
+        <!-- 6. Chemistry Pop-up -->
         <div class="popup-panel" id="popup-chem">
-            <div class="popup-header"><span>Chemistry Glassware</span></div>
+            <div class="popup-header"><span>Chemistry Equipment</span></div>
             <div class="grid-options" style="grid-template-columns: repeat(3, 1fr);">
-                <div class="option-card" data-stamp="beaker">
-                    <i class="fa-solid fa-glass-water"></i>
-                    <span>Beaker</span>
-                </div>
-                <div class="option-card" data-stamp="flask">
-                    <i class="fa-solid fa-vial"></i>
-                    <span>Flask</span>
-                </div>
-                <div class="option-card" data-stamp="burner">
-                    <i class="fa-solid fa-fire-burner"></i>
-                    <span>Bunsen Burner</span>
-                </div>
+                <div class="option-card" data-stamp="beaker"><span class="card-icon">🧪</span><span>Beaker</span></div>
+                <div class="option-card" data-stamp="flask"><span class="card-icon">⚗️</span><span>Flask</span></div>
+                <div class="option-card" data-stamp="burner"><span class="card-icon">🔥</span><span>Bunsen Burner</span></div>
             </div>
         </div>
 
-        <!-- 7. Eraser Settings Pop-up -->
+        <!-- 7. Eraser Pop-up -->
         <div class="popup-panel" id="popup-eraser">
             <div class="popup-header"><span>Eraser Settings</span></div>
             <div class="slider-group">
@@ -580,107 +465,100 @@
             </div>
         </div>
 
-        <!-- Bottom Primary Dock Bar -->
+        <!-- Bottom Main Dock Bar -->
         <div class="bottom-dock">
             <button class="dock-tab active" data-popup="popup-pens" id="tab-pen">
-                <i class="fa-solid fa-pen-line"></i>
-                <span>Pens</span>
+                <span class="tab-icon">✏️</span>
+                <span>Pen</span>
             </button>
 
             <button class="dock-tab" data-popup="popup-shapes" id="tab-shapes">
-                <i class="fa-solid fa-shapes"></i>
+                <span class="tab-icon">🔷</span>
                 <span>Shapes</span>
             </button>
 
-            <button class="dock-tab" data-popup="popup-math">
-                <i class="fa-solid fa-calculator"></i>
+            <button class="dock-tab" data-popup="popup-math" id="tab-math">
+                <span class="tab-icon">📐</span>
                 <span>Math</span>
             </button>
 
-            <button class="dock-tab" data-popup="popup-bio">
-                <i class="fa-solid fa-dna"></i>
+            <button class="dock-tab" data-popup="popup-bio" id="tab-bio">
+                <span class="tab-icon">🧬</span>
                 <span>Bio</span>
             </button>
 
-            <button class="dock-tab" data-popup="popup-physics">
-                <i class="fa-solid fa-atom"></i>
+            <button class="dock-tab" data-popup="popup-physics" id="tab-physics">
+                <span class="tab-icon">⚛️</span>
                 <span>Physics</span>
             </button>
 
-            <button class="dock-tab" data-popup="popup-chem">
-                <i class="fa-solid fa-flask"></i>
+            <button class="dock-tab" data-popup="popup-chem" id="tab-chem">
+                <span class="tab-icon">🧪</span>
                 <span>Chem</span>
             </button>
 
             <div class="dock-divider"></div>
 
             <button class="dock-tab" data-popup="popup-eraser" id="tab-eraser">
-                <i class="fa-solid fa-eraser"></i>
+                <span class="tab-icon">🧹</span>
                 <span>Eraser</span>
             </button>
 
-            <!-- Dedicated Single-Tap Clear Tab -->
+            <!-- 1-Tap Clear Board -->
             <button class="dock-tab" id="btn-clear-board" style="color: #ff6b6b;">
-                <i class="fa-solid fa-trash-can"></i>
+                <span class="tab-icon">🗑️</span>
                 <span>Clear</span>
             </button>
 
             <div class="dock-divider"></div>
 
             <button class="dock-tab" id="btn-mic">
-                <i class="fa-solid fa-microphone"></i>
+                <span class="tab-icon">🎙️</span>
                 <span>Mic</span>
             </button>
 
             <button class="dock-tab" id="btn-save">
-                <i class="fa-solid fa-floppy-disk"></i>
+                <span class="tab-icon">💾</span>
                 <span>Save</span>
             </button>
         </div>
     </div>
 
-    <!-- Application Script -->
     <script>
-        // State Management
+        // Application State
         const state = {
             currentPage: 1,
             totalPages: 1,
             pagesData: {},
-            activeTool: 'pen', // pen, shape, math, stamp, eraser
+            activeTool: 'pen', // pen, shape, stamp, eraser
             penType: 'normal', // normal, glow, calligraphy, flat, highlighter
             color: '#ffffff',
             brushSize: 6,
             eraserSize: 40,
             activeShape: null,
-            activeMathTool: null,
             activeStamp: null,
             isDrawing: false,
-            glowStrokes: [],
-            zoomLevel: 1,
+            disappearingGlowStrokes: [],
+            zoom: 1,
             panX: 0,
-            panY: 0,
-            pinchStartDist: 0
+            panY: 0
         };
 
-        // Canvas Elements
         const container = document.getElementById('canvas-container');
         const gridCanvas = document.getElementById('grid-canvas');
         const mainCanvas = document.getElementById('main-canvas');
         const tempCanvas = document.getElementById('temp-canvas');
-        const toolsCanvas = document.getElementById('tools-canvas');
 
         const ctxGrid = gridCanvas.getContext('2d');
         const ctxMain = mainCanvas.getContext('2d');
         const ctxTemp = tempCanvas.getContext('2d');
-        const ctxTools = toolsCanvas.getContext('2d');
 
         let strokePoints = [];
 
-        // Initialization
         function resizeCanvases() {
             const w = window.innerWidth;
             const h = window.innerHeight;
-            [gridCanvas, mainCanvas, tempCanvas, toolsCanvas].forEach(c => {
+            [gridCanvas, mainCanvas, tempCanvas].forEach(c => {
                 c.width = w;
                 c.height = h;
             });
@@ -695,16 +573,10 @@
 
             const step = 40;
             for (let x = 0; x < gridCanvas.width; x += step) {
-                ctxGrid.beginPath();
-                ctxGrid.moveTo(x, 0);
-                ctxGrid.lineTo(x, gridCanvas.height);
-                ctxGrid.stroke();
+                ctxGrid.beginPath(); ctxGrid.moveTo(x, 0); ctxGrid.lineTo(x, gridCanvas.height); ctxGrid.stroke();
             }
             for (let y = 0; y < gridCanvas.height; y += step) {
-                ctxGrid.beginPath();
-                ctxGrid.moveTo(0, y);
-                ctxGrid.lineTo(gridCanvas.width, y);
-                ctxGrid.stroke();
+                ctxGrid.beginPath(); ctxGrid.moveTo(0, y); ctxGrid.lineTo(gridCanvas.width, y); ctxGrid.stroke();
             }
         }
 
@@ -719,7 +591,7 @@
             }
         }
 
-        // Pop-up Manager
+        // Popups Manager
         const tabs = document.querySelectorAll('.dock-tab[data-popup]');
         const panels = document.querySelectorAll('.popup-panel');
 
@@ -737,6 +609,9 @@
                     targetPanel.classList.add('open');
                     tab.classList.add('active');
                 }
+
+                if (targetId === 'popup-eraser') state.activeTool = 'eraser';
+                else if (targetId === 'popup-pens') state.activeTool = 'pen';
             });
         });
 
@@ -747,7 +622,7 @@
             }
         });
 
-        // Color Swatches Selection
+        // Colors
         document.querySelectorAll('.color-swatch').forEach(swatch => {
             swatch.addEventListener('click', () => {
                 document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
@@ -761,7 +636,7 @@
             document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
         });
 
-        // Pen Selection
+        // Pen Types
         document.querySelectorAll('[data-pen]').forEach(card => {
             card.addEventListener('click', () => {
                 document.querySelectorAll('[data-pen]').forEach(c => c.classList.remove('active'));
@@ -773,31 +648,18 @@
             });
         });
 
-        // Brush & Eraser Size Sliders
-        document.getElementById('brush-size').addEventListener('input', (e) => {
-            state.brushSize = parseInt(e.target.value);
-        });
+        document.getElementById('brush-size').addEventListener('input', (e) => state.brushSize = parseInt(e.target.value));
+        document.getElementById('eraser-size').addEventListener('input', (e) => state.eraserSize = parseInt(e.target.value));
 
-        document.getElementById('eraser-size').addEventListener('input', (e) => {
-            state.eraserSize = parseInt(e.target.value);
-        });
-
-        // Dedicated Clear Button Action
+        // Guaranteed Clear Board
         document.getElementById('btn-clear-board').addEventListener('click', () => {
             ctxMain.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
             ctxTemp.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
-            state.glowStrokes = [];
+            state.disappearingGlowStrokes = [];
             saveCurrentPageData();
         });
 
-        // Eraser Tab Trigger
-        document.getElementById('tab-eraser').addEventListener('click', () => {
-            state.activeTool = 'eraser';
-            state.activeShape = null;
-            state.activeStamp = null;
-        });
-
-        // Shapes Selection
+        // Shape Selection
         document.querySelectorAll('[data-shape]').forEach(card => {
             card.addEventListener('click', () => {
                 document.querySelectorAll('[data-shape]').forEach(c => c.classList.remove('active'));
@@ -808,7 +670,7 @@
             });
         });
 
-        // Bio/Physics/Chem Vector Diagram Stencils
+        // Diagrams & Tools Stamping
         document.querySelectorAll('[data-stamp]').forEach(card => {
             card.addEventListener('click', () => {
                 state.activeTool = 'stamp';
@@ -817,30 +679,41 @@
             });
         });
 
-        // Pointer Event Handlers for Drawing & Gesture Pan/Zoom
+        // Pointer & Gesture Mechanics
         let activePointers = new Map();
+        let initialPinchDist = 0;
 
         function getCanvasPoint(e) {
             const rect = mainCanvas.getBoundingClientRect();
             return {
-                x: e.clientX - rect.left,
-                y: e.clientY - rect.top,
+                x: (e.clientX - rect.left - state.panX) / state.zoom,
+                y: (e.clientY - rect.top - state.panY) / state.zoom,
                 pressure: e.pressure || 0.5
             };
         }
 
         window.addEventListener('pointerdown', (e) => {
-            if (e.target !== tempCanvas && e.target !== viewport) return;
+            if (e.target.closest('.bottom-dock') || e.target.closest('.popup-panel') || e.target.closest('.top-nav')) return;
+            
             activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
             if (activePointers.size === 1) {
-                state.isDrawing = true;
                 const pt = getCanvasPoint(e);
                 strokePoints = [pt];
 
-                if (state.activeTool === 'eraser') {
-                    eraseAt(pt.x, pt.y);
+                if (state.activeTool === 'stamp' && state.activeStamp) {
+                    commitStamp(pt, state.activeStamp);
+                    saveCurrentPageData();
+                    state.isDrawing = false;
+                } else {
+                    state.isDrawing = true;
+                    if (state.activeTool === 'eraser') eraseAt(pt.x, pt.y);
                 }
+            } else if (activePointers.size === 2) {
+                state.isDrawing = false;
+                ctxTemp.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+                const pts = Array.from(activePointers.values());
+                initialPinchDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
             }
         });
 
@@ -848,53 +721,50 @@
             if (!activePointers.has(e.pointerId)) return;
             activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
-            // Multi-finger Gesture Handling (2-finger Pan/Zoom)
+            // 2-Finger Zoom & Pan
             if (activePointers.size === 2) {
-                state.isDrawing = false;
-                ctxTemp.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+                const pts = Array.from(activePointers.values());
+                const currentDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+                if (initialPinchDist > 0) {
+                    const factor = currentDist / initialPinchDist;
+                    state.zoom = Math.min(Math.max(state.zoom * factor, 0.5), 4.0);
+                    initialPinchDist = currentDist;
+                    container.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.zoom})`;
+                }
                 return;
             }
 
             if (!state.isDrawing) return;
-
             const pt = getCanvasPoint(e);
             strokePoints.push(pt);
 
-            if (state.activeTool === 'pen') {
-                drawLiveStroke(pt);
-            } else if (state.activeTool === 'eraser') {
-                eraseAt(pt.x, pt.y);
-            } else if (state.activeTool === 'shape') {
-                drawShapePreview(strokePoints[0], pt);
-            }
+            if (state.activeTool === 'pen') drawLiveStroke(pt);
+            else if (state.activeTool === 'eraser') eraseAt(pt.x, pt.y);
+            else if (state.activeTool === 'shape') drawShapePreview(strokePoints[0], pt);
         });
 
         window.addEventListener('pointerup', (e) => {
             activePointers.delete(e.pointerId);
+            if (activePointers.size < 2) initialPinchDist = 0;
 
             if (state.isDrawing) {
                 state.isDrawing = false;
                 const endPt = strokePoints[strokePoints.length - 1];
 
-                if (state.activeTool === 'pen') {
-                    commitStroke();
-                } else if (state.activeTool === 'shape' && strokePoints.length > 1) {
-                    commitShape(strokePoints[0], endPt);
-                } else if (state.activeTool === 'stamp') {
-                    commitStamp(endPt, state.activeStamp);
-                }
+                if (state.activeTool === 'pen') commitStroke();
+                else if (state.activeTool === 'shape' && strokePoints.length > 1) commitShape(strokePoints[0], endPt);
+
                 saveCurrentPageData();
             }
             ctxTemp.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
         });
 
-        // Drawing Functions
         function drawLiveStroke(currentPt) {
             ctxTemp.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
             ctxTemp.lineCap = 'round';
             ctxTemp.lineJoin = 'round';
 
-            if (state.penType === 'normal') {
+            if (state.penType === 'normal' || state.penType === 'glow') {
                 ctxTemp.strokeStyle = state.color;
                 ctxTemp.lineWidth = state.brushSize;
                 ctxTemp.beginPath();
@@ -903,28 +773,13 @@
                     ctxTemp.lineTo(strokePoints[i+1].x, strokePoints[i+1].y);
                 }
                 ctxTemp.stroke();
-            } else if (state.penType === 'glow') {
-                ctxTemp.strokeStyle = state.color;
-                ctxTemp.shadowColor = state.color;
-                ctxTemp.shadowBlur = 12;
-                ctxTemp.lineWidth = state.brushSize;
-                ctxTemp.beginPath();
-                for (let i = 0; i < strokePoints.length - 1; i++) {
-                    ctxTemp.moveTo(strokePoints[i].x, strokePoints[i].y);
-                    ctxTemp.lineTo(strokePoints[i+1].x, strokePoints[i+1].y);
-                }
-                ctxTemp.stroke();
-                ctxTemp.shadowBlur = 0;
             } else if (state.penType === 'calligraphy') {
                 ctxTemp.strokeStyle = state.color;
                 for (let i = 1; i < strokePoints.length; i++) {
                     const p1 = strokePoints[i-1];
                     const p2 = strokePoints[i];
                     ctxTemp.lineWidth = state.brushSize * (p2.pressure || 0.5) * 1.5;
-                    ctxTemp.beginPath();
-                    ctxTemp.moveTo(p1.x, p1.y);
-                    ctxTemp.lineTo(p2.x, p2.y);
-                    ctxTemp.stroke();
+                    ctxTemp.beginPath(); ctxTemp.moveTo(p1.x, p1.y); ctxTemp.lineTo(p2.x, p2.y); ctxTemp.stroke();
                 }
             } else if (state.penType === 'flat') {
                 ctxTemp.strokeStyle = state.color;
@@ -932,16 +787,12 @@
                 for (let i = 1; i < strokePoints.length; i++) {
                     const p1 = strokePoints[i-1];
                     const p2 = strokePoints[i];
-                    ctxTemp.beginPath();
-                    ctxTemp.moveTo(p1.x - 6, p1.y - 6);
-                    ctxTemp.lineTo(p2.x + 6, p2.y + 6);
-                    ctxTemp.stroke();
+                    ctxTemp.beginPath(); ctxTemp.moveTo(p1.x - 5, p1.y - 5); ctxTemp.lineTo(p2.x + 5, p2.y + 5); ctxTemp.stroke();
                 }
             } else if (state.penType === 'highlighter') {
                 ctxTemp.strokeStyle = state.color;
                 ctxTemp.globalAlpha = 0.35;
                 ctxTemp.lineWidth = state.brushSize * 2.5;
-                ctxTemp.lineCap = 'square';
                 ctxTemp.beginPath();
                 for (let i = 0; i < strokePoints.length - 1; i++) {
                     ctxTemp.moveTo(strokePoints[i].x, strokePoints[i].y);
@@ -954,12 +805,12 @@
 
         function commitStroke() {
             if (state.penType === 'glow') {
-                // Glow pen strokes are added to pulsing glow manager loop
-                state.glowStrokes.push({
+                state.disappearingGlowStrokes.push({
                     points: [...strokePoints],
                     color: state.color,
                     size: state.brushSize,
-                    createdAt: Date.now()
+                    createdAt: Date.now(),
+                    lifespan: 8000
                 });
             } else {
                 ctxMain.drawImage(tempCanvas, 0, 0);
@@ -975,7 +826,43 @@
             ctxMain.restore();
         }
 
-        // Shape Rendering Functions
+        // Disappearing Pulsing Glow Pen Animation Loop
+        function animateDisappearingGlowPen() {
+            if (state.disappearingGlowStrokes.length > 0) {
+                drawGrid();
+                redrawPageData();
+
+                const now = Date.now();
+                state.disappearingGlowStrokes = state.disappearingGlowStrokes.filter(stroke => {
+                    const elapsed = now - stroke.createdAt;
+                    if (elapsed > stroke.lifespan) return false;
+
+                    const pulse = (Math.sin(elapsed / 150) + 1) / 2;
+                    const fade = 1 - (elapsed / stroke.lifespan);
+
+                    ctxMain.save();
+                    ctxMain.strokeStyle = stroke.color;
+                    ctxMain.shadowColor = stroke.color;
+                    ctxMain.shadowBlur = 18 * pulse;
+                    ctxMain.globalAlpha = pulse * fade;
+                    ctxMain.lineWidth = stroke.size;
+                    ctxMain.lineCap = 'round';
+
+                    ctxMain.beginPath();
+                    for (let i = 0; i < stroke.points.length - 1; i++) {
+                        ctxMain.moveTo(stroke.points[i].x, stroke.points[i].y);
+                        ctxMain.lineTo(stroke.points[i+1].x, stroke.points[i+1].y);
+                    }
+                    ctxMain.stroke();
+                    ctxMain.restore();
+
+                    return true;
+                });
+            }
+            requestAnimationFrame(animateDisappearingGlowPen);
+        }
+        animateDisappearingGlowPen();
+
         function drawShapePreview(p1, p2) {
             ctxTemp.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
             ctxTemp.strokeStyle = state.color;
@@ -995,11 +882,9 @@
             const h = p2.y - p1.y;
 
             if (shape === 'line') {
-                targetCtx.moveTo(p1.x, p1.y);
-                targetCtx.lineTo(p2.x, p2.y);
+                targetCtx.moveTo(p1.x, p1.y); targetCtx.lineTo(p2.x, p2.y);
             } else if (shape === 'arrow') {
-                targetCtx.moveTo(p1.x, p1.y);
-                targetCtx.lineTo(p2.x, p2.y);
+                targetCtx.moveTo(p1.x, p1.y); targetCtx.lineTo(p2.x, p2.y);
                 const angle = Math.atan2(h, w);
                 targetCtx.lineTo(p2.x - 15 * Math.cos(angle - Math.PI / 6), p2.y - 15 * Math.sin(angle - Math.PI / 6));
                 targetCtx.moveTo(p2.x, p2.y);
@@ -1007,12 +892,15 @@
             } else if (shape === 'rectangle') {
                 targetCtx.rect(p1.x, p1.y, w, h);
             } else if (shape === 'circle') {
-                const radius = Math.hypot(w, h);
-                targetCtx.arc(p1.x, p1.y, radius, 0, Math.PI * 2);
+                targetCtx.arc(p1.x, p1.y, Math.hypot(w, h), 0, Math.PI * 2);
             } else if (shape === 'triangle') {
-                targetCtx.moveTo(p1.x + w / 2, p1.y);
-                targetCtx.lineTo(p1.x, p2.y);
-                targetCtx.lineTo(p2.x, p2.y);
+                targetCtx.moveTo(p1.x + w / 2, p1.y); targetCtx.lineTo(p1.x, p2.y); targetCtx.lineTo(p2.x, p2.y); targetCtx.closePath();
+            } else if (shape === 'star') {
+                const r = Math.hypot(w, h);
+                for (let i = 0; i < 5; i++) {
+                    targetCtx.lineTo(p1.x + r * Math.cos((18 + i * 72) * Math.PI / 180), p1.y - r * Math.sin((18 + i * 72) * Math.PI / 180));
+                    targetCtx.lineTo(p1.x + (r/2) * Math.cos((54 + i * 72) * Math.PI / 180), p1.y - (r/2) * Math.sin((54 + i * 72) * Math.PI / 180));
+                }
                 targetCtx.closePath();
             } else if (shape === 'cube') {
                 targetCtx.rect(p1.x, p1.y, w, h);
@@ -1021,103 +909,101 @@
                 targetCtx.moveTo(p1.x+w, p1.y); targetCtx.lineTo(p1.x + w*1.3, p1.y - h*0.3);
                 targetCtx.moveTo(p1.x, p1.y+h); targetCtx.lineTo(p1.x + w*0.3, p1.y + h*0.7);
                 targetCtx.moveTo(p1.x+w, p1.y+h); targetCtx.lineTo(p1.x + w*1.3, p1.y + h*0.7);
+            } else if (shape === 'cylinder') {
+                targetCtx.ellipse(p1.x + w/2, p1.y, Math.abs(w/2), 15, 0, 0, Math.PI*2);
+                targetCtx.ellipse(p1.x + w/2, p2.y, Math.abs(w/2), 15, 0, 0, Math.PI*2);
+                targetCtx.moveTo(p1.x, p1.y); targetCtx.lineTo(p1.x, p2.y);
+                targetCtx.moveTo(p2.x, p1.y); targetCtx.lineTo(p2.x, p2.y);
             }
             targetCtx.stroke();
         }
 
-        // Clear & Detailed Vector Diagrams (Animal Cell, Physics, Chem)
+        // Accurate Stamping Function
         function commitStamp(pt, type) {
             ctxMain.save();
             ctxMain.translate(pt.x, pt.y);
             ctxMain.strokeStyle = '#ffffff';
-            ctxMain.fillStyle = 'rgba(255,255,255,0.1)';
+            ctxMain.fillStyle = '#ffffff';
             ctxMain.lineWidth = 2;
+            ctxMain.font = '12px Segoe UI, sans-serif';
 
             if (type === 'animal-cell') {
-                // Irregular Outer Membrane
+                // Outer Cell Membrane
                 ctxMain.beginPath();
-                ctxMain.ellipse(0, 0, 110, 80, Math.PI/12, 0, Math.PI*2);
+                ctxMain.ellipse(0, 0, 150, 100, 0, 0, Math.PI * 2);
                 ctxMain.stroke();
-                // Nucleus with Nucleolus
-                ctxMain.beginPath();
-                ctxMain.arc(-15, -10, 28, 0, Math.PI*2);
+
+                // Nucleus & Nucleolus
+                ctxMain.beginPath(); ctxMain.arc(-30, -10, 38, 0, Math.PI * 2); ctxMain.stroke();
+                ctxMain.beginPath(); ctxMain.arc(-30, -10, 14, 0, Math.PI * 2); ctxMain.fill();
+
+                // Mitochondria with Cristae
+                ctxMain.beginPath(); ctxMain.ellipse(70, 30, 24, 12, Math.PI / 4, 0, Math.PI * 2); ctxMain.stroke();
+                ctxMain.beginPath(); ctxMain.moveTo(60, 22); ctxMain.lineTo(80, 38); ctxMain.stroke();
+
+                // Folded Golgi Apparatus
+                ctxMain.beginPath(); ctxMain.arc(60, -40, 22, Math.PI*0.8, Math.PI*1.8); ctxMain.stroke();
+                ctxMain.beginPath(); ctxMain.arc(65, -35, 22, Math.PI*0.8, Math.PI*1.8); ctxMain.stroke();
+
+                // Centrioles
+                ctxMain.rect(-20, 55, 12, 12); ctxMain.stroke();
+                ctxMain.rect(-12, 49, 12, 12); ctxMain.stroke();
+
+                // Lysosome
+                ctxMain.beginPath(); ctxMain.arc(-80, -20, 12, 0, Math.PI * 2); ctxMain.stroke();
+
+                // Accurate Arrow Pointer Labels
+                drawLabelArrow(ctxMain, -30, -48, -30, -85, 'Nucleus');
+                drawLabelArrow(ctxMain, 150, 0, 195, 0, 'Cell Membrane');
+                drawLabelArrow(ctxMain, 80, 42, 125, 65, 'Mitochondria');
+                drawLabelArrow(ctxMain, 68, -48, 115, -70, 'Golgi Apparatus');
+                drawLabelArrow(ctxMain, -20, 67, -20, 95, 'Centrioles');
+                drawLabelArrow(ctxMain, -80, -32, -120, -55, 'Lysosome');
+                drawLabelArrow(ctxMain, 20, 10, 45, 85, 'Cytoplasm');
+
+            } else if (type === 'ruler') {
+                ctxMain.rect(-150, -25, 300, 50); ctxMain.stroke();
+                for (let i = -140; i <= 140; i += 10) {
+                    const h = (i % 50 === 0) ? 20 : 10;
+                    ctxMain.moveTo(i, -25); ctxMain.lineTo(i, -25 + h);
+                }
                 ctxMain.stroke();
-                ctxMain.beginPath();
-                ctxMain.arc(-15, -10, 10, 0, Math.PI*2);
-                ctxMain.fillStyle = '#ffffff';
-                ctxMain.fill();
-                // Mitochondria
-                ctxMain.beginPath();
-                ctxMain.ellipse(45, 25, 22, 10, Math.PI/4, 0, Math.PI*2);
+                ctxMain.fillText('RULER (cm)', -30, 15);
+            } else if (type === 'protractor') {
+                ctxMain.beginPath(); ctxMain.arc(0, 0, 120, Math.PI, 0); ctxMain.closePath(); ctxMain.stroke();
+                for (let a = 0; a <= 180; a += 10) {
+                    const rad = (a - 180) * Math.PI / 180;
+                    ctxMain.moveTo(100 * Math.cos(rad), 100 * Math.sin(rad));
+                    ctxMain.lineTo(120 * Math.cos(rad), 120 * Math.sin(rad));
+                }
                 ctxMain.stroke();
-                // Labels
-                ctxMain.font = '12px sans-serif';
-                ctxMain.fillText('Nucleus', -35, -45);
-                ctxMain.fillText('Cell Membrane', 50, -60);
-                ctxMain.fillText('Mitochondria', 45, 50);
+            } else if (type === 'setsquare') {
+                ctxMain.beginPath(); ctxMain.moveTo(-100, 80); ctxMain.lineTo(100, 80); ctxMain.lineTo(-100, -100); ctxMain.closePath(); ctxMain.stroke();
+            } else if (type === 'compass') {
+                ctxMain.beginPath(); ctxMain.moveTo(0, -60); ctxMain.lineTo(-40, 60); ctxMain.moveTo(0, -60); ctxMain.lineTo(40, 60); ctxMain.stroke();
+                ctxMain.beginPath(); ctxMain.arc(0, -60, 10, 0, Math.PI*2); ctxMain.stroke();
             } else if (type === 'beaker') {
-                ctxMain.beginPath();
-                ctxMain.moveTo(-40, -60);
-                ctxMain.lineTo(-40, 50);
-                ctxMain.quadraticCurveTo(-40, 60, -30, 60);
-                ctxMain.lineTo(30, 60);
-                ctxMain.quadraticCurveTo(40, 60, 40, 50);
-                ctxMain.lineTo(40, -60);
-                ctxMain.stroke();
-                // Liquid level line
-                ctxMain.beginPath();
-                ctxMain.moveTo(-35, 10);
-                ctxMain.lineTo(35, 10);
-                ctxMain.strokeStyle = '#00ff88';
-                ctxMain.stroke();
+                ctxMain.beginPath(); ctxMain.moveTo(-40, -60); ctxMain.lineTo(-40, 50); ctxMain.quadraticCurveTo(-40, 60, -30, 60);
+                ctxMain.lineTo(30, 60); ctxMain.quadraticCurveTo(40, 60, 40, 50); ctxMain.lineTo(40, -60); ctxMain.stroke();
+                ctxMain.moveTo(-35, 10); ctxMain.lineTo(35, 10); ctxMain.stroke();
             } else if (type === 'circuit') {
-                ctxMain.beginPath();
-                ctxMain.rect(-80, -40, 160, 80);
-                ctxMain.stroke();
-                // Battery lines
-                ctxMain.clearRect(-15, -45, 30, 10);
-                ctxMain.beginPath();
-                ctxMain.moveTo(-10, -50); ctxMain.lineTo(-10, -35);
-                ctxMain.moveTo(5, -58); ctxMain.lineTo(5, -28);
-                ctxMain.stroke();
+                ctxMain.rect(-80, -40, 160, 80); ctxMain.stroke();
+                ctxMain.clearRect(-20, -42, 40, 5);
+                ctxMain.beginPath(); ctxMain.arc(0, -40, 12, 0, Math.PI*2); ctxMain.stroke();
             }
 
             ctxMain.restore();
         }
 
-        // Glow Pen Pulsing Loop
-        function animateGlowPen() {
-            if (state.glowStrokes.length > 0) {
-                drawGrid();
-                redrawPageData();
-
-                const now = Date.now();
-                // Rhythmically cycle glow opacity (disappear -> glow -> disappear)
-                const pulse = (Math.sin(now / 200) + 1) / 2;
-
-                ctxMain.save();
-                state.glowStrokes.forEach(stroke => {
-                    ctxMain.strokeStyle = stroke.color;
-                    ctxMain.shadowColor = stroke.color;
-                    ctxMain.shadowBlur = 15 * pulse;
-                    ctxMain.globalAlpha = 0.2 + (pulse * 0.8);
-                    ctxMain.lineWidth = stroke.size;
-                    ctxMain.lineCap = 'round';
-
-                    ctxMain.beginPath();
-                    for (let i = 0; i < stroke.points.length - 1; i++) {
-                        ctxMain.moveTo(stroke.points[i].x, stroke.points[i].y);
-                        ctxMain.lineTo(stroke.points[i+1].x, stroke.points[i+1].y);
-                    }
-                    ctxMain.stroke();
-                });
-                ctxMain.restore();
-            }
-            requestAnimationFrame(animateGlowPen);
+        function drawLabelArrow(ctx, x1, y1, x2, y2, text) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+            ctx.fillText(text, x2 + (x2 >= x1 ? 5 : -40), y2 + 4);
         }
-        animateGlowPen();
 
-        // Multi-Page Management
+        // Multi-page Support
         document.getElementById('add-page-btn').addEventListener('click', () => {
             saveCurrentPageData();
             state.totalPages++;
@@ -1148,7 +1034,7 @@
             document.getElementById('page-indicator').innerText = `Page ${state.currentPage} / ${state.totalPages}`;
         }
 
-        // Voice Recognition (Speech-to-Text Dictation)
+        // Speech Recognition
         const micBtn = document.getElementById('btn-mic');
         const speechToast = document.getElementById('speech-toast');
         const speechText = document.getElementById('speech-text');
@@ -1157,7 +1043,6 @@
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             const recognition = new SpeechRecognition();
             recognition.continuous = false;
-            recognition.interimResults = true;
 
             micBtn.addEventListener('click', () => {
                 speechToast.style.display = 'flex';
@@ -1165,33 +1050,23 @@
             });
 
             recognition.onresult = (e) => {
-                const transcript = Array.from(e.results)
-                    .map(result => result[0].transcript)
-                    .join('');
+                const transcript = e.results[0][0].transcript;
                 speechText.innerText = transcript;
-
-                if (e.results[0].isFinal) {
-                    // Write recognized text to canvas
-                    ctxMain.font = '24px sans-serif';
-                    ctxMain.fillStyle = state.color;
-                    ctxMain.fillText(transcript, mainCanvas.width / 2 - 100, mainCanvas.height / 2);
-                    setTimeout(() => { speechToast.style.display = 'none'; }, 2000);
-                }
+                ctxMain.font = '24px Segoe UI, sans-serif';
+                ctxMain.fillStyle = state.color;
+                ctxMain.fillText(transcript, mainCanvas.width / 2 - 100, mainCanvas.height / 2);
+                setTimeout(() => speechToast.style.display = 'none', 2000);
             };
-
-            recognition.onerror = () => {
-                speechToast.style.display = 'none';
-            };
+            recognition.onerror = () => speechToast.style.display = 'none';
         }
 
-        // Save Image Action
+        // Save Image
         document.getElementById('btn-save').addEventListener('click', () => {
             const exportCanvas = document.createElement('canvas');
             exportCanvas.width = mainCanvas.width;
             exportCanvas.height = mainCanvas.height;
             const expCtx = exportCanvas.getContext('2d');
 
-            // Draw dark green background + main drawings
             expCtx.fillStyle = '#113826';
             expCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
             expCtx.drawImage(mainCanvas, 0, 0);
@@ -1202,7 +1077,6 @@
             link.click();
         });
 
-        // Window Event Listeners
         window.addEventListener('resize', resizeCanvases);
         resizeCanvases();
     </script>
