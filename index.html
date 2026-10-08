@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Dark Green Interactive Smart Board</title>
+    <title>Dark Green Infinite Smart Board</title>
     <style>
         :root {
             --board-bg: #113826;
             --dock-bg: rgba(8, 26, 17, 0.94);
-            --border-color: rgba(255, 255, 255, 0.18);
+            --border-color: rgba(255, 255, 255, 0.2);
             --active-color: #00ff88;
             --text-color: #e0f2fe;
         }
@@ -31,7 +31,6 @@
             color: var(--text-color);
         }
 
-        /* Viewport & Canvas Container */
         #viewport {
             position: relative;
             width: 100vw;
@@ -40,36 +39,25 @@
             overflow: hidden;
         }
 
-        #canvas-container {
+        canvas {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            transform-origin: 0 0;
-        }
-
-        canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
             display: block;
         }
 
-        #grid-canvas { z-index: 1; }
-        #main-canvas { z-index: 2; }
-        #temp-canvas { z-index: 3; }
-
-        /* Top Bar */
+        /* FIXED UI ELEMENTS (Never Zoom or Pan) */
         .top-nav {
-            position: absolute;
+            position: fixed;
             top: 16px;
             left: 20px;
             right: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            z-index: 100;
+            z-index: 1000;
             pointer-events: none;
         }
 
@@ -126,9 +114,8 @@
 
         .page-btn:hover { background: rgba(255,255,255,0.15); }
 
-        /* Bottom Dock Toolbar */
         .bottom-dock {
-            position: absolute;
+            position: fixed;
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
@@ -140,7 +127,7 @@
             display: flex;
             align-items: center;
             gap: 18px;
-            z-index: 100;
+            z-index: 1000;
             box-shadow: 0 12px 32px rgba(0,0,0,0.6);
         }
 
@@ -160,11 +147,7 @@
             gap: 4px;
         }
 
-        .dock-tab .tab-icon {
-            font-size: 18px;
-            font-weight: bold;
-        }
-
+        .dock-tab .tab-icon { font-size: 18px; font-weight: bold; }
         .dock-tab span { font-size: 11px; font-weight: 500; }
 
         .dock-tab:hover {
@@ -184,9 +167,8 @@
             background: var(--border-color);
         }
 
-        /* Floating Popups */
         .popup-panel {
-            position: absolute;
+            position: fixed;
             bottom: 95px;
             left: 50%;
             transform: translateX(-50%) translateY(20px) scale(0.95);
@@ -195,7 +177,7 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
             padding: 20px;
             border-radius: 20px;
-            z-index: 99;
+            z-index: 999;
             box-shadow: 0 16px 40px rgba(0,0,0,0.7);
             opacity: 0;
             pointer-events: none;
@@ -308,7 +290,7 @@
         .slider-group input[type="range"] { flex: 1; accent-color: var(--active-color); }
 
         #speech-toast {
-            position: absolute;
+            position: fixed;
             top: 70px;
             left: 50%;
             transform: translateX(-50%);
@@ -321,25 +303,22 @@
             display: none;
             align-items: center;
             gap: 8px;
-            z-index: 200;
+            z-index: 1001;
         }
     </style>
 </head>
 <body>
 
     <div id="viewport">
-        <!-- Canvas Container -->
-        <div id="canvas-container">
-            <canvas id="grid-canvas"></canvas>
-            <canvas id="main-canvas"></canvas>
-            <canvas id="temp-canvas"></canvas>
-        </div>
+        <!-- Render Canvas -->
+        <canvas id="board-canvas"></canvas>
 
-        <!-- Top Navigation -->
+        <!-- Top Header Navigation Controls -->
         <div class="top-nav">
             <div class="brand-badge">
                 <span class="dot"></span>
                 <span>Smart Board</span>
+                <span id="zoom-indicator" style="font-size: 11px; opacity: 0.7; margin-left: 6px;">100%</span>
             </div>
 
             <div class="page-controls">
@@ -350,7 +329,7 @@
             </div>
         </div>
 
-        <!-- Speech Toast -->
+        <!-- Speech Dictation Status Toast -->
         <div id="speech-toast">
             <span id="speech-text">Listening... Speak now</span>
         </div>
@@ -414,14 +393,18 @@
             </div>
         </div>
 
-        <!-- 3. Math Geometry Equipment Pop-up -->
+        <!-- 3. Math Geometry Tools Pop-up -->
         <div class="popup-panel" id="popup-math">
-            <div class="popup-header"><span>Mathematics Box</span></div>
+            <div class="popup-header"><span>Interactive Mathematics Box</span></div>
             <div class="grid-options" style="grid-template-columns: repeat(2, 1fr);">
-                <div class="option-card" data-stamp="ruler"><span class="card-icon">📏</span><span>Ruler</span></div>
-                <div class="option-card" data-stamp="protractor"><span class="card-icon">📐</span><span>Protractor</span></div>
-                <div class="option-card" data-stamp="setsquare"><span class="card-icon">📐</span><span>Set Square</span></div>
-                <div class="option-card" data-stamp="compass"><span class="card-icon">🧭</span><span>Compass</span></div>
+                <div class="option-card" data-tool="compass"><span class="card-icon">🧭</span><span>Draw Circle (Compass)</span></div>
+                <div class="option-card" data-tool="ruler"><span class="card-icon">📏</span><span>Extendable Ruler</span></div>
+                <div class="option-card" data-tool="protractor"><span class="card-icon">📐</span><span>Protractor (180°)</span></div>
+                <div class="option-card" data-tool="setsquare"><span class="card-icon">📐</span><span>Set Square (45°)</span></div>
+            </div>
+            <div class="slider-group">
+                <label>Tool Size</label>
+                <input type="range" id="math-size-slider" min="50" max="600" value="200">
             </div>
         </div>
 
@@ -504,7 +487,6 @@
                 <span>Eraser</span>
             </button>
 
-            <!-- 1-Tap Clear Board -->
             <button class="dock-tab" id="btn-clear-board" style="color: #ff6b6b;">
                 <span class="tab-icon">🗑️</span>
                 <span>Clear</span>
@@ -524,561 +506,575 @@
         </div>
     </div>
 
+    <!-- Vector Engine & Application Logic -->
     <script>
-        // Application State
-        const state = {
-            currentPage: 1,
-            totalPages: 1,
-            pagesData: {},
-            activeTool: 'pen', // pen, shape, stamp, eraser
-            penType: 'normal', // normal, glow, calligraphy, flat, highlighter
-            color: '#ffffff',
-            brushSize: 6,
-            eraserSize: 40,
-            activeShape: null,
-            activeStamp: null,
-            isDrawing: false,
-            disappearingGlowStrokes: [],
-            zoom: 1,
-            panX: 0,
-            panY: 0
-        };
-
-        const container = document.getElementById('canvas-container');
-        const gridCanvas = document.getElementById('grid-canvas');
-        const mainCanvas = document.getElementById('main-canvas');
-        const tempCanvas = document.getElementById('temp-canvas');
-
-        const ctxGrid = gridCanvas.getContext('2d');
-        const ctxMain = mainCanvas.getContext('2d');
-        const ctxTemp = tempCanvas.getContext('2d');
-
-        let strokePoints = [];
-
-        function resizeCanvases() {
-            const w = window.innerWidth;
-            const h = window.innerHeight;
-            [gridCanvas, mainCanvas, tempCanvas].forEach(c => {
-                c.width = w;
-                c.height = h;
-            });
-            drawGrid();
-            redrawPageData();
-        }
-
-        function drawGrid() {
-            ctxGrid.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
-            ctxGrid.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-            ctxGrid.lineWidth = 1;
-
-            const step = 40;
-            for (let x = 0; x < gridCanvas.width; x += step) {
-                ctxGrid.beginPath(); ctxGrid.moveTo(x, 0); ctxGrid.lineTo(x, gridCanvas.height); ctxGrid.stroke();
-            }
-            for (let y = 0; y < gridCanvas.height; y += step) {
-                ctxGrid.beginPath(); ctxGrid.moveTo(0, y); ctxGrid.lineTo(gridCanvas.width, y); ctxGrid.stroke();
-            }
-        }
-
-        function saveCurrentPageData() {
-            state.pagesData[state.currentPage] = ctxMain.getImageData(0, 0, mainCanvas.width, mainCanvas.height);
-        }
-
-        function redrawPageData() {
-            ctxMain.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
-            if (state.pagesData[state.currentPage]) {
-                ctxMain.putImageData(state.pagesData[state.currentPage], 0, 0);
-            }
-        }
-
-        // Popups Manager
-        const tabs = document.querySelectorAll('.dock-tab[data-popup]');
-        const panels = document.querySelectorAll('.popup-panel');
-
-        tabs.forEach(tab => {
-            tab.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const targetId = tab.getAttribute('data-popup');
-                const targetPanel = document.getElementById(targetId);
-
-                const isOpen = targetPanel.classList.contains('open');
-                panels.forEach(p => p.classList.remove('open'));
-                tabs.forEach(t => t.classList.remove('active'));
-
-                if (!isOpen) {
-                    targetPanel.classList.add('open');
-                    tab.classList.add('active');
-                }
-
-                if (targetId === 'popup-eraser') state.activeTool = 'eraser';
-                else if (targetId === 'popup-pens') state.activeTool = 'pen';
-            });
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.popup-panel') && !e.target.closest('.bottom-dock')) {
-                panels.forEach(p => p.classList.remove('open'));
-                tabs.forEach(t => t.classList.remove('active'));
-            }
-        });
-
-        // Colors
-        document.querySelectorAll('.color-swatch').forEach(swatch => {
-            swatch.addEventListener('click', () => {
-                document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
-                swatch.classList.add('active');
-                state.color = swatch.getAttribute('data-color');
-            });
-        });
-
-        document.getElementById('custom-color-input').addEventListener('input', (e) => {
-            state.color = e.target.value;
-            document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
-        });
-
-        // Pen Types
-        document.querySelectorAll('[data-pen]').forEach(card => {
-            card.addEventListener('click', () => {
-                document.querySelectorAll('[data-pen]').forEach(c => c.classList.remove('active'));
-                card.classList.add('active');
-                state.penType = card.getAttribute('data-pen');
-                state.activeTool = 'pen';
-                state.activeShape = null;
-                state.activeStamp = null;
-            });
-        });
-
-        document.getElementById('brush-size').addEventListener('input', (e) => state.brushSize = parseInt(e.target.value));
-        document.getElementById('eraser-size').addEventListener('input', (e) => state.eraserSize = parseInt(e.target.value));
-
-        // Guaranteed Clear Board
-        document.getElementById('btn-clear-board').addEventListener('click', () => {
-            ctxMain.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
-            ctxTemp.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
-            state.disappearingGlowStrokes = [];
-            saveCurrentPageData();
-        });
-
-        // Shape Selection
-        document.querySelectorAll('[data-shape]').forEach(card => {
-            card.addEventListener('click', () => {
-                document.querySelectorAll('[data-shape]').forEach(c => c.classList.remove('active'));
-                card.classList.add('active');
-                state.activeTool = 'shape';
-                state.activeShape = card.getAttribute('data-shape');
-                panels.forEach(p => p.classList.remove('open'));
-            });
-        });
-
-        // Diagrams & Tools Stamping
-        document.querySelectorAll('[data-stamp]').forEach(card => {
-            card.addEventListener('click', () => {
-                state.activeTool = 'stamp';
-                state.activeStamp = card.getAttribute('data-stamp');
-                panels.forEach(p => p.classList.remove('open'));
-            });
-        });
-
-        // Pointer & Gesture Mechanics
-        let activePointers = new Map();
-        let initialPinchDist = 0;
-
-        function getCanvasPoint(e) {
-            const rect = mainCanvas.getBoundingClientRect();
-            return {
-                x: (e.clientX - rect.left - state.panX) / state.zoom,
-                y: (e.clientY - rect.top - state.panY) / state.zoom,
-                pressure: e.pressure || 0.5
+        function initSmartBoard() {
+            // Vector State Manager (Pages contain array of infinite world objects)
+            const state = {
+                currentPage: 1,
+                totalPages: 1,
+                pagesVectorData: { 1: [] },
+                activeTool: 'pen',
+                penType: 'normal',
+                color: '#ffffff',
+                brushSize: 6,
+                eraserSize: 40,
+                activeShape: null,
+                activeStamp: null,
+                activeMathTool: null,
+                mathToolSize: 200,
+                isDrawing: false,
+                currentStroke: null,
+                
+                // Infinite Viewport Transform State
+                scale: 1.0,
+                offsetX: 0,
+                offsetY: 0
             };
-        }
 
-        window.addEventListener('pointerdown', (e) => {
-            if (e.target.closest('.bottom-dock') || e.target.closest('.popup-panel') || e.target.closest('.top-nav')) return;
-            
-            activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            const canvas = document.getElementById('board-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
 
-            if (activePointers.size === 1) {
-                const pt = getCanvasPoint(e);
-                strokePoints = [pt];
-
-                if (state.activeTool === 'stamp' && state.activeStamp) {
-                    commitStamp(pt, state.activeStamp);
-                    saveCurrentPageData();
-                    state.isDrawing = false;
-                } else {
-                    state.isDrawing = true;
-                    if (state.activeTool === 'eraser') eraseAt(pt.x, pt.y);
-                }
-            } else if (activePointers.size === 2) {
-                state.isDrawing = false;
-                ctxTemp.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
-                const pts = Array.from(activePointers.values());
-                initialPinchDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-            }
-        });
-
-        window.addEventListener('pointermove', (e) => {
-            if (!activePointers.has(e.pointerId)) return;
-            activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-
-            // 2-Finger Zoom & Pan
-            if (activePointers.size === 2) {
-                const pts = Array.from(activePointers.values());
-                const currentDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-                if (initialPinchDist > 0) {
-                    const factor = currentDist / initialPinchDist;
-                    state.zoom = Math.min(Math.max(state.zoom * factor, 0.5), 4.0);
-                    initialPinchDist = currentDist;
-                    container.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.zoom})`;
-                }
-                return;
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                renderBoard();
             }
 
-            if (!state.isDrawing) return;
-            const pt = getCanvasPoint(e);
-            strokePoints.push(pt);
-
-            if (state.activeTool === 'pen') drawLiveStroke(pt);
-            else if (state.activeTool === 'eraser') eraseAt(pt.x, pt.y);
-            else if (state.activeTool === 'shape') drawShapePreview(strokePoints[0], pt);
-        });
-
-        window.addEventListener('pointerup', (e) => {
-            activePointers.delete(e.pointerId);
-            if (activePointers.size < 2) initialPinchDist = 0;
-
-            if (state.isDrawing) {
-                state.isDrawing = false;
-                const endPt = strokePoints[strokePoints.length - 1];
-
-                if (state.activeTool === 'pen') commitStroke();
-                else if (state.activeTool === 'shape' && strokePoints.length > 1) commitShape(strokePoints[0], endPt);
-
-                saveCurrentPageData();
+            // Screen Coordinates <-> Vector World Coordinates Converters
+            function toWorld(screenX, screenY) {
+                return {
+                    x: (screenX - state.offsetX) / state.scale,
+                    y: (screenY - state.offsetY) / state.scale
+                };
             }
-            ctxTemp.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
-        });
 
-        function drawLiveStroke(currentPt) {
-            ctxTemp.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
-            ctxTemp.lineCap = 'round';
-            ctxTemp.lineJoin = 'round';
-
-            if (state.penType === 'normal' || state.penType === 'glow') {
-                ctxTemp.strokeStyle = state.color;
-                ctxTemp.lineWidth = state.brushSize;
-                ctxTemp.beginPath();
-                for (let i = 0; i < strokePoints.length - 1; i++) {
-                    ctxTemp.moveTo(strokePoints[i].x, strokePoints[i].y);
-                    ctxTemp.lineTo(strokePoints[i+1].x, strokePoints[i+1].y);
-                }
-                ctxTemp.stroke();
-            } else if (state.penType === 'calligraphy') {
-                ctxTemp.strokeStyle = state.color;
-                for (let i = 1; i < strokePoints.length; i++) {
-                    const p1 = strokePoints[i-1];
-                    const p2 = strokePoints[i];
-                    ctxTemp.lineWidth = state.brushSize * (p2.pressure || 0.5) * 1.5;
-                    ctxTemp.beginPath(); ctxTemp.moveTo(p1.x, p1.y); ctxTemp.lineTo(p2.x, p2.y); ctxTemp.stroke();
-                }
-            } else if (state.penType === 'flat') {
-                ctxTemp.strokeStyle = state.color;
-                ctxTemp.lineWidth = state.brushSize;
-                for (let i = 1; i < strokePoints.length; i++) {
-                    const p1 = strokePoints[i-1];
-                    const p2 = strokePoints[i];
-                    ctxTemp.beginPath(); ctxTemp.moveTo(p1.x - 5, p1.y - 5); ctxTemp.lineTo(p2.x + 5, p2.y + 5); ctxTemp.stroke();
-                }
-            } else if (state.penType === 'highlighter') {
-                ctxTemp.strokeStyle = state.color;
-                ctxTemp.globalAlpha = 0.35;
-                ctxTemp.lineWidth = state.brushSize * 2.5;
-                ctxTemp.beginPath();
-                for (let i = 0; i < strokePoints.length - 1; i++) {
-                    ctxTemp.moveTo(strokePoints[i].x, strokePoints[i].y);
-                    ctxTemp.lineTo(strokePoints[i+1].x, strokePoints[i+1].y);
-                }
-                ctxTemp.stroke();
-                ctxTemp.globalAlpha = 1.0;
+            function toScreen(worldX, worldY) {
+                return {
+                    x: worldX * state.scale + state.offsetX,
+                    y: worldY * state.scale + state.offsetY
+                };
             }
-        }
 
-        function commitStroke() {
-            if (state.penType === 'glow') {
-                state.disappearingGlowStrokes.push({
-                    points: [...strokePoints],
-                    color: state.color,
-                    size: state.brushSize,
-                    createdAt: Date.now(),
-                    lifespan: 8000
-                });
-            } else {
-                ctxMain.drawImage(tempCanvas, 0, 0);
-            }
-        }
+            // Main Infinite Canvas Render Engine
+            function renderBoard() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        function eraseAt(x, y) {
-            ctxMain.save();
-            ctxMain.globalCompositeOperation = 'destination-out';
-            ctxMain.beginPath();
-            ctxMain.arc(x, y, state.eraserSize / 2, 0, Math.PI * 2);
-            ctxMain.fill();
-            ctxMain.restore();
-        }
+                // 1. Render Scaled Infinite Grid Mesh
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+                ctx.lineWidth = 1;
 
-        // Disappearing Pulsing Glow Pen Animation Loop
-        function animateDisappearingGlowPen() {
-            if (state.disappearingGlowStrokes.length > 0) {
-                drawGrid();
-                redrawPageData();
+                const gridStep = 40 * state.scale;
+                const startX = state.offsetX % gridStep;
+                const startY = state.offsetY % gridStep;
 
+                for (let x = startX; x < canvas.width; x += gridStep) {
+                    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+                }
+                for (let y = startY; y < canvas.height; y += gridStep) {
+                    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+                }
+
+                // 2. Render Page Vector Objects
+                const elements = state.pagesVectorData[state.currentPage] || [];
                 const now = Date.now();
-                state.disappearingGlowStrokes = state.disappearingGlowStrokes.filter(stroke => {
-                    const elapsed = now - stroke.createdAt;
-                    if (elapsed > stroke.lifespan) return false;
 
-                    const pulse = (Math.sin(elapsed / 150) + 1) / 2;
-                    const fade = 1 - (elapsed / stroke.lifespan);
+                elements.forEach(obj => {
+                    renderVectorObject(ctx, obj, now);
+                });
 
-                    ctxMain.save();
-                    ctxMain.strokeStyle = stroke.color;
-                    ctxMain.shadowColor = stroke.color;
-                    ctxMain.shadowBlur = 18 * pulse;
-                    ctxMain.globalAlpha = pulse * fade;
-                    ctxMain.lineWidth = stroke.size;
-                    ctxMain.lineCap = 'round';
+                // 3. Render Active Stroke Preview
+                if (state.currentStroke) {
+                    renderVectorObject(ctx, state.currentStroke, now);
+                }
 
-                    ctxMain.beginPath();
-                    for (let i = 0; i < stroke.points.length - 1; i++) {
-                        ctxMain.moveTo(stroke.points[i].x, stroke.points[i].y);
-                        ctxMain.lineTo(stroke.points[i+1].x, stroke.points[i+1].y);
+                document.getElementById('zoom-indicator').innerText = `${Math.round(state.scale * 100)}%`;
+            }
+
+            function renderVectorObject(targetCtx, obj, now) {
+                targetCtx.save();
+
+                if (obj.type === 'stroke') {
+                    if (obj.penType === 'glow') {
+                        const elapsed = now - obj.createdAt;
+                        if (elapsed > obj.lifespan) return;
+                        const pulse = (Math.sin(elapsed / 150) + 1) / 2;
+                        const fade = 1 - (elapsed / obj.lifespan);
+
+                        targetCtx.strokeStyle = obj.color;
+                        targetCtx.shadowColor = obj.color;
+                        targetCtx.shadowBlur = 18 * pulse;
+                        targetCtx.globalAlpha = pulse * fade;
+                        targetCtx.lineWidth = obj.size * state.scale;
+                        targetCtx.lineCap = 'round';
+                        targetCtx.lineJoin = 'round';
+
+                        targetCtx.beginPath();
+                        obj.points.forEach((pt, i) => {
+                            const scr = toScreen(pt.x, pt.y);
+                            if (i === 0) targetCtx.moveTo(scr.x, scr.y);
+                            else targetCtx.lineTo(scr.x, scr.y);
+                        });
+                        targetCtx.stroke();
+
+                    } else if (obj.penType === 'highlighter') {
+                        targetCtx.strokeStyle = obj.color;
+                        targetCtx.globalAlpha = 0.35;
+                        targetCtx.lineWidth = obj.size * 2.5 * state.scale;
+                        targetCtx.lineCap = 'round';
+
+                        targetCtx.beginPath();
+                        obj.points.forEach((pt, i) => {
+                            const scr = toScreen(pt.x, pt.y);
+                            if (i === 0) targetCtx.moveTo(scr.x, scr.y);
+                            else targetCtx.lineTo(scr.x, scr.y);
+                        });
+                        targetCtx.stroke();
+
+                    } else {
+                        targetCtx.strokeStyle = obj.color;
+                        targetCtx.lineWidth = obj.size * state.scale;
+                        targetCtx.lineCap = 'round';
+                        targetCtx.lineJoin = 'round';
+
+                        targetCtx.beginPath();
+                        obj.points.forEach((pt, i) => {
+                            const scr = toScreen(pt.x, pt.y);
+                            if (i === 0) targetCtx.moveTo(scr.x, scr.y);
+                            else targetCtx.lineTo(scr.x, scr.y);
+                        });
+                        targetCtx.stroke();
                     }
-                    ctxMain.stroke();
-                    ctxMain.restore();
 
+                } else if (obj.type === 'shape') {
+                    targetCtx.strokeStyle = obj.color;
+                    targetCtx.lineWidth = obj.size * state.scale;
+                    const p1 = toScreen(obj.p1.x, obj.p1.y);
+                    const p2 = toScreen(obj.p2.x, obj.p2.y);
+                    renderShapeVector(targetCtx, p1, p2, obj.shape);
+
+                } else if (obj.type === 'stamp') {
+                    const scr = toScreen(obj.x, obj.y);
+                    renderStampVector(targetCtx, scr, obj.stampType, state.scale);
+
+                } else if (obj.type === 'math') {
+                    const scr = toScreen(obj.x, obj.y);
+                    renderMathVector(targetCtx, scr, obj.mathType, obj.size * state.scale);
+                }
+
+                targetCtx.restore();
+            }
+
+            function renderShapeVector(targetCtx, p1, p2, shape) {
+                targetCtx.beginPath();
+                const w = p2.x - p1.x;
+                const h = p2.y - p1.y;
+
+                if (shape === 'line') {
+                    targetCtx.moveTo(p1.x, p1.y); targetCtx.lineTo(p2.x, p2.y);
+                } else if (shape === 'arrow') {
+                    targetCtx.moveTo(p1.x, p1.y); targetCtx.lineTo(p2.x, p2.y);
+                    const angle = Math.atan2(h, w);
+                    targetCtx.lineTo(p2.x - 15 * Math.cos(angle - Math.PI / 6), p2.y - 15 * Math.sin(angle - Math.PI / 6));
+                    targetCtx.moveTo(p2.x, p2.y);
+                    targetCtx.lineTo(p2.x - 15 * Math.cos(angle + Math.PI / 6), p2.y - 15 * Math.sin(angle + Math.PI / 6));
+                } else if (shape === 'rectangle') {
+                    targetCtx.rect(p1.x, p1.y, w, h);
+                } else if (shape === 'circle') {
+                    targetCtx.arc(p1.x, p1.y, Math.hypot(w, h), 0, Math.PI * 2);
+                } else if (shape === 'triangle') {
+                    targetCtx.moveTo(p1.x + w / 2, p1.y); targetCtx.lineTo(p1.x, p2.y); targetCtx.lineTo(p2.x, p2.y); targetCtx.closePath();
+                } else if (shape === 'star') {
+                    const r = Math.hypot(w, h);
+                    for (let i = 0; i < 5; i++) {
+                        targetCtx.lineTo(p1.x + r * Math.cos((18 + i * 72) * Math.PI / 180), p1.y - r * Math.sin((18 + i * 72) * Math.PI / 180));
+                        targetCtx.lineTo(p1.x + (r/2) * Math.cos((54 + i * 72) * Math.PI / 180), p1.y - (r/2) * Math.sin((54 + i * 72) * Math.PI / 180));
+                    }
+                    targetCtx.closePath();
+                } else if (shape === 'cube') {
+                    targetCtx.rect(p1.x, p1.y, w, h);
+                    targetCtx.rect(p1.x + w*0.3, p1.y - h*0.3, w, h);
+                    targetCtx.moveTo(p1.x, p1.y); targetCtx.lineTo(p1.x + w*0.3, p1.y - h*0.3);
+                    targetCtx.moveTo(p1.x+w, p1.y); targetCtx.lineTo(p1.x + w*1.3, p1.y - h*0.3);
+                    targetCtx.moveTo(p1.x, p1.y+h); targetCtx.lineTo(p1.x + w*0.3, p1.y + h*0.7);
+                    targetCtx.moveTo(p1.x+w, p1.y+h); targetCtx.lineTo(p1.x + w*1.3, p1.y + h*0.7);
+                } else if (shape === 'cylinder') {
+                    targetCtx.ellipse(p1.x + w/2, p1.y, Math.abs(w/2), 15, 0, 0, Math.PI*2);
+                    targetCtx.ellipse(p1.x + w/2, p2.y, Math.abs(w/2), 15, 0, 0, Math.PI*2);
+                    targetCtx.moveTo(p1.x, p1.y); targetCtx.lineTo(p1.x, p2.y);
+                    targetCtx.moveTo(p2.x, p1.y); targetCtx.lineTo(p2.x, p2.y);
+                }
+                targetCtx.stroke();
+            }
+
+            function renderStampVector(targetCtx, scr, stampType, currentScale) {
+                targetCtx.save();
+                targetCtx.translate(scr.x, scr.y);
+                targetCtx.strokeStyle = '#ffffff';
+                targetCtx.fillStyle = '#ffffff';
+                targetCtx.lineWidth = Math.max(1, 2 * currentScale);
+                targetCtx.font = `${Math.max(8, Math.round(12 * currentScale))}px Segoe UI, sans-serif`;
+
+                const s = currentScale;
+
+                if (stampType === 'animal-cell') {
+                    targetCtx.beginPath(); targetCtx.ellipse(0, 0, 150*s, 100*s, 0, 0, Math.PI * 2); targetCtx.stroke();
+                    targetCtx.beginPath(); targetCtx.arc(-30*s, -10*s, 38*s, 0, Math.PI * 2); targetCtx.stroke();
+                    targetCtx.beginPath(); targetCtx.arc(-30*s, -10*s, 14*s, 0, Math.PI * 2); targetCtx.fill();
+                    targetCtx.beginPath(); targetCtx.ellipse(70*s, 30*s, 24*s, 12*s, Math.PI / 4, 0, Math.PI * 2); targetCtx.stroke();
+                    targetCtx.beginPath(); targetCtx.arc(60*s, -40*s, 22*s, Math.PI*0.8, Math.PI*1.8); targetCtx.stroke();
+                    targetCtx.rect(-20*s, 55*s, 12*s, 12*s); targetCtx.stroke();
+
+                    drawLabelArrow(targetCtx, -30*s, -48*s, -30*s, -85*s, 'Nucleus', s);
+                    drawLabelArrow(targetCtx, 150*s, 0, 195*s, 0, 'Cell Membrane', s);
+                    drawLabelArrow(targetCtx, 80*s, 42*s, 125*s, 65*s, 'Mitochondria', s);
+                    drawLabelArrow(targetCtx, 68*s, -48*s, 115*s, -70*s, 'Golgi Apparatus', s);
+                    drawLabelArrow(targetCtx, -20*s, 67*s, -20*s, 95*s, 'Centrioles', s);
+                    drawLabelArrow(targetCtx, 20*s, 10*s, 45*s, 85*s, 'Cytoplasm', s);
+                } else if (stampType === 'beaker') {
+                    targetCtx.beginPath(); targetCtx.moveTo(-40*s, -60*s); targetCtx.lineTo(-40*s, 50*s);
+                    targetCtx.quadraticCurveTo(-40*s, 60*s, -30*s, 60*s); targetCtx.lineTo(30*s, 60*s);
+                    targetCtx.quadraticCurveTo(40*s, 60*s, 40*s, 50*s); targetCtx.lineTo(40*s, -60*s); targetCtx.stroke();
+                } else if (stampType === 'circuit') {
+                    targetCtx.rect(-80*s, -40*s, 160*s, 80*s); targetCtx.stroke();
+                }
+
+                targetCtx.restore();
+            }
+
+            function renderMathVector(targetCtx, scr, mathType, scaledSize) {
+                targetCtx.save();
+                targetCtx.translate(scr.x, scr.y);
+                targetCtx.strokeStyle = state.color;
+                targetCtx.fillStyle = state.color;
+                targetCtx.lineWidth = 2;
+                targetCtx.font = '12px Segoe UI, sans-serif';
+
+                if (mathType === 'compass') {
+                    targetCtx.beginPath(); targetCtx.arc(0, 0, scaledSize / 2, 0, Math.PI * 2); targetCtx.stroke();
+                    targetCtx.beginPath(); targetCtx.arc(0, 0, 4, 0, Math.PI * 2); targetCtx.fill();
+                    targetCtx.beginPath(); targetCtx.moveTo(0, 0); targetCtx.lineTo(scaledSize / 2, 0); targetCtx.stroke();
+                    targetCtx.fillText(`r = ${Math.round(scaledSize / (2 * state.scale))}px`, scaledSize / 4 - 15, -8);
+                } else if (mathType === 'ruler') {
+                    targetCtx.rect(-scaledSize / 2, -25, scaledSize, 50); targetCtx.stroke();
+                    for (let i = -scaledSize / 2 + 10; i <= scaledSize / 2 - 10; i += 10) {
+                        const isCm = ((i + scaledSize / 2) % 50 === 0);
+                        targetCtx.moveTo(i, -25); targetCtx.lineTo(i, -25 + (isCm ? 18 : 8));
+                    }
+                    targetCtx.stroke();
+                } else if (mathType === 'protractor') {
+                    const r = scaledSize / 2;
+                    targetCtx.beginPath(); targetCtx.arc(0, 0, r, Math.PI, 0); targetCtx.closePath(); targetCtx.stroke();
+                    for (let deg = 0; deg <= 180; deg += 10) {
+                        const rad = (deg - 180) * Math.PI / 180;
+                        targetCtx.moveTo(r * Math.cos(rad), r * Math.sin(rad));
+                        targetCtx.lineTo((r - 12) * Math.cos(rad), (r - 12) * Math.sin(rad));
+                    }
+                    targetCtx.stroke();
+                }
+
+                targetCtx.restore();
+            }
+
+            function drawLabelArrow(targetCtx, x1, y1, x2, y2, text, scale) {
+                targetCtx.beginPath(); targetCtx.moveTo(x1, y1); targetCtx.lineTo(x2, y2); targetCtx.stroke();
+                targetCtx.fillText(text, x2 + (x2 >= x1 ? 5 : -40*scale), y2 + 4);
+            }
+
+            // Eraser Engine for Vector Elements
+            function eraseAtWorld(worldPt) {
+                const list = state.pagesVectorData[state.currentPage] || [];
+                const eraseRadius = state.eraserSize / state.scale;
+
+                state.pagesVectorData[state.currentPage] = list.filter(obj => {
+                    if (obj.type === 'stamp' || obj.type === 'math') {
+                        return Math.hypot(obj.x - worldPt.x, obj.y - worldPt.y) > eraseRadius;
+                    } else if (obj.type === 'stroke') {
+                        return !obj.points.some(pt => Math.hypot(pt.x - worldPt.x, pt.y - worldPt.y) < eraseRadius);
+                    }
                     return true;
                 });
             }
-            requestAnimationFrame(animateDisappearingGlowPen);
-        }
-        animateDisappearingGlowPen();
 
-        function drawShapePreview(p1, p2) {
-            ctxTemp.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
-            ctxTemp.strokeStyle = state.color;
-            ctxTemp.lineWidth = state.brushSize;
-            renderShape(ctxTemp, p1, p2, state.activeShape);
-        }
+            // Pointer Gesture Engine (1 Finger Draw/Stamp, 2 Finger Pan/Zoom)
+            let activePointers = new Map();
+            let initialPinchDist = 0;
+            let startPanX = 0, startPanY = 0;
 
-        function commitShape(p1, p2) {
-            ctxMain.strokeStyle = state.color;
-            ctxMain.lineWidth = state.brushSize;
-            renderShape(ctxMain, p1, p2, state.activeShape);
-        }
+            window.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+                
+                // Infinite Zoom Center Calculation
+                const mouseX = e.clientX;
+                const mouseY = e.clientY;
+                const worldBefore = toWorld(mouseX, mouseY);
 
-        function renderShape(targetCtx, p1, p2, shape) {
-            targetCtx.beginPath();
-            const w = p2.x - p1.x;
-            const h = p2.y - p1.y;
+                state.scale = Math.max(0.01, Math.min(100.0, state.scale * zoomFactor));
 
-            if (shape === 'line') {
-                targetCtx.moveTo(p1.x, p1.y); targetCtx.lineTo(p2.x, p2.y);
-            } else if (shape === 'arrow') {
-                targetCtx.moveTo(p1.x, p1.y); targetCtx.lineTo(p2.x, p2.y);
-                const angle = Math.atan2(h, w);
-                targetCtx.lineTo(p2.x - 15 * Math.cos(angle - Math.PI / 6), p2.y - 15 * Math.sin(angle - Math.PI / 6));
-                targetCtx.moveTo(p2.x, p2.y);
-                targetCtx.lineTo(p2.x - 15 * Math.cos(angle + Math.PI / 6), p2.y - 15 * Math.sin(angle + Math.PI / 6));
-            } else if (shape === 'rectangle') {
-                targetCtx.rect(p1.x, p1.y, w, h);
-            } else if (shape === 'circle') {
-                targetCtx.arc(p1.x, p1.y, Math.hypot(w, h), 0, Math.PI * 2);
-            } else if (shape === 'triangle') {
-                targetCtx.moveTo(p1.x + w / 2, p1.y); targetCtx.lineTo(p1.x, p2.y); targetCtx.lineTo(p2.x, p2.y); targetCtx.closePath();
-            } else if (shape === 'star') {
-                const r = Math.hypot(w, h);
-                for (let i = 0; i < 5; i++) {
-                    targetCtx.lineTo(p1.x + r * Math.cos((18 + i * 72) * Math.PI / 180), p1.y - r * Math.sin((18 + i * 72) * Math.PI / 180));
-                    targetCtx.lineTo(p1.x + (r/2) * Math.cos((54 + i * 72) * Math.PI / 180), p1.y - (r/2) * Math.sin((54 + i * 72) * Math.PI / 180));
+                state.offsetX = mouseX - worldBefore.x * state.scale;
+                state.offsetY = mouseY - worldBefore.y * state.scale;
+
+                renderBoard();
+            }, { passive: false });
+
+            window.addEventListener('pointerdown', (e) => {
+                if (e.target.closest('.bottom-dock') || e.target.closest('.popup-panel') || e.target.closest('.top-nav')) return;
+
+                activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+                if (activePointers.size === 1) {
+                    const worldPt = toWorld(e.clientX, e.clientY);
+
+                    if (state.activeTool === 'stamp' && state.activeStamp) {
+                        state.pagesVectorData[state.currentPage].push({
+                            type: 'stamp',
+                            stampType: state.activeStamp,
+                            x: worldPt.x,
+                            y: worldPt.y
+                        });
+                        renderBoard();
+                    } else if (state.activeTool === 'math' && state.activeMathTool) {
+                        state.pagesVectorData[state.currentPage].push({
+                            type: 'math',
+                            mathType: state.activeMathTool,
+                            size: state.mathToolSize,
+                            x: worldPt.x,
+                            y: worldPt.y
+                        });
+                        renderBoard();
+                    } else if (state.activeTool === 'eraser') {
+                        state.isDrawing = true;
+                        eraseAtWorld(worldPt);
+                        renderBoard();
+                    } else if (state.activeTool === 'pen') {
+                        state.isDrawing = true;
+                        state.currentStroke = {
+                            type: 'stroke',
+                            penType: state.penType,
+                            color: state.color,
+                            size: state.brushSize,
+                            points: [worldPt],
+                            createdAt: Date.now(),
+                            lifespan: 8000
+                        };
+                    } else if (state.activeTool === 'shape') {
+                        state.isDrawing = true;
+                        state.currentStroke = {
+                            type: 'shape',
+                            shape: state.activeShape,
+                            color: state.color,
+                            size: state.brushSize,
+                            p1: worldPt,
+                            p2: worldPt
+                        };
+                    }
+                } else if (activePointers.size === 2) {
+                    state.isDrawing = false;
+                    state.currentStroke = null;
+                    const pts = Array.from(activePointers.values());
+                    initialPinchDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+                    startPanX = state.offsetX;
+                    startPanY = state.offsetY;
                 }
-                targetCtx.closePath();
-            } else if (shape === 'cube') {
-                targetCtx.rect(p1.x, p1.y, w, h);
-                targetCtx.rect(p1.x + w*0.3, p1.y - h*0.3, w, h);
-                targetCtx.moveTo(p1.x, p1.y); targetCtx.lineTo(p1.x + w*0.3, p1.y - h*0.3);
-                targetCtx.moveTo(p1.x+w, p1.y); targetCtx.lineTo(p1.x + w*1.3, p1.y - h*0.3);
-                targetCtx.moveTo(p1.x, p1.y+h); targetCtx.lineTo(p1.x + w*0.3, p1.y + h*0.7);
-                targetCtx.moveTo(p1.x+w, p1.y+h); targetCtx.lineTo(p1.x + w*1.3, p1.y + h*0.7);
-            } else if (shape === 'cylinder') {
-                targetCtx.ellipse(p1.x + w/2, p1.y, Math.abs(w/2), 15, 0, 0, Math.PI*2);
-                targetCtx.ellipse(p1.x + w/2, p2.y, Math.abs(w/2), 15, 0, 0, Math.PI*2);
-                targetCtx.moveTo(p1.x, p1.y); targetCtx.lineTo(p1.x, p2.y);
-                targetCtx.moveTo(p2.x, p1.y); targetCtx.lineTo(p2.x, p2.y);
-            }
-            targetCtx.stroke();
-        }
-
-        // Accurate Stamping Function
-        function commitStamp(pt, type) {
-            ctxMain.save();
-            ctxMain.translate(pt.x, pt.y);
-            ctxMain.strokeStyle = '#ffffff';
-            ctxMain.fillStyle = '#ffffff';
-            ctxMain.lineWidth = 2;
-            ctxMain.font = '12px Segoe UI, sans-serif';
-
-            if (type === 'animal-cell') {
-                // Outer Cell Membrane
-                ctxMain.beginPath();
-                ctxMain.ellipse(0, 0, 150, 100, 0, 0, Math.PI * 2);
-                ctxMain.stroke();
-
-                // Nucleus & Nucleolus
-                ctxMain.beginPath(); ctxMain.arc(-30, -10, 38, 0, Math.PI * 2); ctxMain.stroke();
-                ctxMain.beginPath(); ctxMain.arc(-30, -10, 14, 0, Math.PI * 2); ctxMain.fill();
-
-                // Mitochondria with Cristae
-                ctxMain.beginPath(); ctxMain.ellipse(70, 30, 24, 12, Math.PI / 4, 0, Math.PI * 2); ctxMain.stroke();
-                ctxMain.beginPath(); ctxMain.moveTo(60, 22); ctxMain.lineTo(80, 38); ctxMain.stroke();
-
-                // Folded Golgi Apparatus
-                ctxMain.beginPath(); ctxMain.arc(60, -40, 22, Math.PI*0.8, Math.PI*1.8); ctxMain.stroke();
-                ctxMain.beginPath(); ctxMain.arc(65, -35, 22, Math.PI*0.8, Math.PI*1.8); ctxMain.stroke();
-
-                // Centrioles
-                ctxMain.rect(-20, 55, 12, 12); ctxMain.stroke();
-                ctxMain.rect(-12, 49, 12, 12); ctxMain.stroke();
-
-                // Lysosome
-                ctxMain.beginPath(); ctxMain.arc(-80, -20, 12, 0, Math.PI * 2); ctxMain.stroke();
-
-                // Accurate Arrow Pointer Labels
-                drawLabelArrow(ctxMain, -30, -48, -30, -85, 'Nucleus');
-                drawLabelArrow(ctxMain, 150, 0, 195, 0, 'Cell Membrane');
-                drawLabelArrow(ctxMain, 80, 42, 125, 65, 'Mitochondria');
-                drawLabelArrow(ctxMain, 68, -48, 115, -70, 'Golgi Apparatus');
-                drawLabelArrow(ctxMain, -20, 67, -20, 95, 'Centrioles');
-                drawLabelArrow(ctxMain, -80, -32, -120, -55, 'Lysosome');
-                drawLabelArrow(ctxMain, 20, 10, 45, 85, 'Cytoplasm');
-
-            } else if (type === 'ruler') {
-                ctxMain.rect(-150, -25, 300, 50); ctxMain.stroke();
-                for (let i = -140; i <= 140; i += 10) {
-                    const h = (i % 50 === 0) ? 20 : 10;
-                    ctxMain.moveTo(i, -25); ctxMain.lineTo(i, -25 + h);
-                }
-                ctxMain.stroke();
-                ctxMain.fillText('RULER (cm)', -30, 15);
-            } else if (type === 'protractor') {
-                ctxMain.beginPath(); ctxMain.arc(0, 0, 120, Math.PI, 0); ctxMain.closePath(); ctxMain.stroke();
-                for (let a = 0; a <= 180; a += 10) {
-                    const rad = (a - 180) * Math.PI / 180;
-                    ctxMain.moveTo(100 * Math.cos(rad), 100 * Math.sin(rad));
-                    ctxMain.lineTo(120 * Math.cos(rad), 120 * Math.sin(rad));
-                }
-                ctxMain.stroke();
-            } else if (type === 'setsquare') {
-                ctxMain.beginPath(); ctxMain.moveTo(-100, 80); ctxMain.lineTo(100, 80); ctxMain.lineTo(-100, -100); ctxMain.closePath(); ctxMain.stroke();
-            } else if (type === 'compass') {
-                ctxMain.beginPath(); ctxMain.moveTo(0, -60); ctxMain.lineTo(-40, 60); ctxMain.moveTo(0, -60); ctxMain.lineTo(40, 60); ctxMain.stroke();
-                ctxMain.beginPath(); ctxMain.arc(0, -60, 10, 0, Math.PI*2); ctxMain.stroke();
-            } else if (type === 'beaker') {
-                ctxMain.beginPath(); ctxMain.moveTo(-40, -60); ctxMain.lineTo(-40, 50); ctxMain.quadraticCurveTo(-40, 60, -30, 60);
-                ctxMain.lineTo(30, 60); ctxMain.quadraticCurveTo(40, 60, 40, 50); ctxMain.lineTo(40, -60); ctxMain.stroke();
-                ctxMain.moveTo(-35, 10); ctxMain.lineTo(35, 10); ctxMain.stroke();
-            } else if (type === 'circuit') {
-                ctxMain.rect(-80, -40, 160, 80); ctxMain.stroke();
-                ctxMain.clearRect(-20, -42, 40, 5);
-                ctxMain.beginPath(); ctxMain.arc(0, -40, 12, 0, Math.PI*2); ctxMain.stroke();
-            }
-
-            ctxMain.restore();
-        }
-
-        function drawLabelArrow(ctx, x1, y1, x2, y2, text) {
-            ctx.beginPath();
-            ctx.moveTo(x1, y1);
-            ctx.lineTo(x2, y2);
-            ctx.stroke();
-            ctx.fillText(text, x2 + (x2 >= x1 ? 5 : -40), y2 + 4);
-        }
-
-        // Multi-page Support
-        document.getElementById('add-page-btn').addEventListener('click', () => {
-            saveCurrentPageData();
-            state.totalPages++;
-            state.currentPage = state.totalPages;
-            ctxMain.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
-            updatePageIndicator();
-        });
-
-        document.getElementById('prev-page-btn').addEventListener('click', () => {
-            if (state.currentPage > 1) {
-                saveCurrentPageData();
-                state.currentPage--;
-                redrawPageData();
-                updatePageIndicator();
-            }
-        });
-
-        document.getElementById('next-page-btn').addEventListener('click', () => {
-            if (state.currentPage < state.totalPages) {
-                saveCurrentPageData();
-                state.currentPage++;
-                redrawPageData();
-                updatePageIndicator();
-            }
-        });
-
-        function updatePageIndicator() {
-            document.getElementById('page-indicator').innerText = `Page ${state.currentPage} / ${state.totalPages}`;
-        }
-
-        // Speech Recognition
-        const micBtn = document.getElementById('btn-mic');
-        const speechToast = document.getElementById('speech-toast');
-        const speechText = document.getElementById('speech-text');
-
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            const recognition = new SpeechRecognition();
-            recognition.continuous = false;
-
-            micBtn.addEventListener('click', () => {
-                speechToast.style.display = 'flex';
-                recognition.start();
             });
 
-            recognition.onresult = (e) => {
-                const transcript = e.results[0][0].transcript;
-                speechText.innerText = transcript;
-                ctxMain.font = '24px Segoe UI, sans-serif';
-                ctxMain.fillStyle = state.color;
-                ctxMain.fillText(transcript, mainCanvas.width / 2 - 100, mainCanvas.height / 2);
-                setTimeout(() => speechToast.style.display = 'none', 2000);
-            };
-            recognition.onerror = () => speechToast.style.display = 'none';
+            window.addEventListener('pointermove', (e) => {
+                if (!activePointers.has(e.pointerId)) return;
+                activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+                if (activePointers.size === 2) {
+                    const pts = Array.from(activePointers.values());
+                    const currentDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+
+                    if (initialPinchDist > 0) {
+                        const midX = (pts[0].x + pts[1].x) / 2;
+                        const midY = (pts[0].y + pts[1].y) / 2;
+                        const worldBefore = toWorld(midX, midY);
+
+                        const factor = currentDist / initialPinchDist;
+                        state.scale = Math.max(0.01, Math.min(100.0, state.scale * factor));
+                        initialPinchDist = currentDist;
+
+                        state.offsetX = midX - worldBefore.x * state.scale;
+                        state.offsetY = midY - worldBefore.y * state.scale;
+
+                        renderBoard();
+                    }
+                    return;
+                }
+
+                if (!state.isDrawing) return;
+                const worldPt = toWorld(e.clientX, e.clientY);
+
+                if (state.activeTool === 'pen' && state.currentStroke) {
+                    state.currentStroke.points.push(worldPt);
+                    renderBoard();
+                } else if (state.activeTool === 'shape' && state.currentStroke) {
+                    state.currentStroke.p2 = worldPt;
+                    renderBoard();
+                } else if (state.activeTool === 'eraser') {
+                    eraseAtWorld(worldPt);
+                    renderBoard();
+                }
+            });
+
+            window.addEventListener('pointerup', (e) => {
+                activePointers.delete(e.pointerId);
+                if (activePointers.size < 2) initialPinchDist = 0;
+
+                if (state.isDrawing && state.currentStroke) {
+                    state.pagesVectorData[state.currentPage].push(state.currentStroke);
+                    state.currentStroke = null;
+                    state.isDrawing = false;
+                    renderBoard();
+                }
+            });
+
+            // UI Tab Actions
+            const tabs = document.querySelectorAll('.dock-tab[data-popup]');
+            const panels = document.querySelectorAll('.popup-panel');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const targetId = tab.getAttribute('data-popup');
+                    const targetPanel = document.getElementById(targetId);
+
+                    const isOpen = targetPanel.classList.contains('open');
+                    panels.forEach(p => p.classList.remove('open'));
+                    tabs.forEach(t => t.classList.remove('active'));
+
+                    if (!isOpen) {
+                        targetPanel.classList.add('open');
+                        tab.classList.add('active');
+                    }
+
+                    if (targetId === 'popup-eraser') state.activeTool = 'eraser';
+                    else if (targetId === 'popup-pens') state.activeTool = 'pen';
+                });
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.popup-panel') && !e.target.closest('.bottom-dock')) {
+                    panels.forEach(p => p.classList.remove('open'));
+                    tabs.forEach(t => t.classList.remove('active'));
+                }
+            });
+
+            document.querySelectorAll('.color-swatch').forEach(swatch => {
+                swatch.addEventListener('click', () => {
+                    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+                    swatch.classList.add('active');
+                    state.color = swatch.getAttribute('data-color');
+                });
+            });
+
+            document.getElementById('custom-color-input').addEventListener('input', (e) => {
+                state.color = e.target.value;
+                document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+            });
+
+            document.querySelectorAll('[data-pen]').forEach(card => {
+                card.addEventListener('click', () => {
+                    document.querySelectorAll('[data-pen]').forEach(c => c.classList.remove('active'));
+                    card.classList.add('active');
+                    state.penType = card.getAttribute('data-pen');
+                    state.activeTool = 'pen';
+                    state.activeShape = null;
+                    state.activeStamp = null;
+                    state.activeMathTool = null;
+                });
+            });
+
+            document.getElementById('brush-size').addEventListener('input', (e) => state.brushSize = parseInt(e.target.value));
+            document.getElementById('eraser-size').addEventListener('input', (e) => state.eraserSize = parseInt(e.target.value));
+
+            document.getElementById('btn-clear-board').addEventListener('click', () => {
+                state.pagesVectorData[state.currentPage] = [];
+                renderBoard();
+            });
+
+            document.querySelectorAll('[data-shape]').forEach(card => {
+                card.addEventListener('click', () => {
+                    document.querySelectorAll('[data-shape]').forEach(c => c.classList.remove('active'));
+                    card.classList.add('active');
+                    state.activeTool = 'shape';
+                    state.activeShape = card.getAttribute('data-shape');
+                    state.activeMathTool = null;
+                    panels.forEach(p => p.classList.remove('open'));
+                });
+            });
+
+            document.querySelectorAll('[data-stamp]').forEach(card => {
+                card.addEventListener('click', () => {
+                    state.activeTool = 'stamp';
+                    state.activeStamp = card.getAttribute('data-stamp');
+                    state.activeMathTool = null;
+                    panels.forEach(p => p.classList.remove('open'));
+                });
+            });
+
+            document.querySelectorAll('[data-tool]').forEach(card => {
+                card.addEventListener('click', () => {
+                    document.querySelectorAll('[data-tool]').forEach(c => c.classList.remove('active'));
+                    card.classList.add('active');
+                    state.activeTool = 'math';
+                    state.activeMathTool = card.getAttribute('data-tool');
+                    panels.forEach(p => p.classList.remove('open'));
+                });
+            });
+
+            document.getElementById('math-size-slider').addEventListener('input', (e) => {
+                state.mathToolSize = parseInt(e.target.value);
+            });
+
+            // Multi-Page Support
+            document.getElementById('add-page-btn').addEventListener('click', () => {
+                state.totalPages++;
+                state.currentPage = state.totalPages;
+                state.pagesVectorData[state.currentPage] = [];
+                updatePageIndicator();
+                renderBoard();
+            });
+
+            document.getElementById('prev-page-btn').addEventListener('click', () => {
+                if (state.currentPage > 1) {
+                    state.currentPage--;
+                    updatePageIndicator();
+                    renderBoard();
+                }
+            });
+
+            document.getElementById('next-page-btn').addEventListener('click', () => {
+                if (state.currentPage < state.totalPages) {
+                    state.currentPage++;
+                    updatePageIndicator();
+                    renderBoard();
+                }
+            });
+
+            function updatePageIndicator() {
+                document.getElementById('page-indicator').innerText = `Page ${state.currentPage} / ${state.totalPages}`;
+            }
+
+            // Continuous Animation Loop for Pulsing Glow Pen
+            function animationLoop() {
+                renderBoard();
+                requestAnimationFrame(animationLoop);
+            }
+            requestAnimationFrame(animationLoop);
+
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
         }
 
-        // Save Image
-        document.getElementById('btn-save').addEventListener('click', () => {
-            const exportCanvas = document.createElement('canvas');
-            exportCanvas.width = mainCanvas.width;
-            exportCanvas.height = mainCanvas.height;
-            const expCtx = exportCanvas.getContext('2d');
-
-            expCtx.fillStyle = '#113826';
-            expCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
-            expCtx.drawImage(mainCanvas, 0, 0);
-
-            const link = document.createElement('a');
-            link.download = `SmartBoard_Page_${state.currentPage}.png`;
-            link.href = exportCanvas.toDataURL('image/png');
-            link.click();
-        });
-
-        window.addEventListener('resize', resizeCanvases);
-        resizeCanvases();
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initSmartBoard);
+        } else {
+            initSmartBoard();
+        }
     </script>
 </body>
 </html>
